@@ -1,4 +1,5 @@
-# NoGReTsFs - NodeJS GraphQL React TypeScript Fullstack Application Template
+# NoGReTsFs
+### NodeJS, GraphQL, React, TypeScript, Fullstack,Application Template
 
 ## Description
 This is a template for a fullstack application using NodeJS, GraphQL, React, TypeScript, and PostgreSQL. It is intended to be used as a starting point for a new project.
