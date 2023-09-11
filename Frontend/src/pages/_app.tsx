@@ -3,7 +3,7 @@ import { Client, Provider, fetchExchange } from 'urql';
 import { AppProps } from 'next/app'
 import { cacheExchange, Cache, QueryInput } from '@urql/exchange-graphcache';
 import theme from '../theme'
-import { LoginMutation, MeDocument, MeQuery, RegisterMutation } from '../generated/graphql';
+import { LoginMutation, LogoutMutation, MeDocument, MeQuery, RegisterMutation } from '../generated/graphql';
 
 function typedUpdateQuery<Result, Query>(
   cache: Cache,
@@ -22,6 +22,20 @@ const client = new Client({
   exchanges: [cacheExchange({
     updates: {
       Mutation: {
+        logout: (result, args, cache, info) => {
+          typedUpdateQuery<LogoutMutation, MeQuery>(cache,
+            { query: MeDocument },
+            result,
+            (res, qry) => {
+              if (res.logout) {
+                return {
+                  me: null,
+                };
+              } else {
+                return qry;
+              }
+          });
+        },
         login: (result, args, cache, info) => {
           typedUpdateQuery<LoginMutation, MeQuery>(cache,
             { query: MeDocument },
@@ -48,11 +62,11 @@ const client = new Client({
           });
         },
       },
-      Subscription: {
-        subscriptionField: (result, args, cache, info) => {
-          // ...
-        },
-      },
+      // Subscription: {
+      //   subscriptionField: (result, args, cache, info) => {
+      //     // ...
+      //   },
+      // },
     },
   }), fetchExchange],
 });
