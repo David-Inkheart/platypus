@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@mikro-orm/core");
+const constants_1 = require("./constants");
 const mikro_orm_config_1 = __importDefault(require("./mikro-orm.config"));
 const express_1 = __importDefault(require("express"));
 const apollo_server_express_1 = require("apollo-server-express");
@@ -32,7 +33,7 @@ const main = async () => {
         credentials: true,
     }));
     app.use((0, express_session_1.default)({
-        name: "qid",
+        name: constants_1.COOKIE_NAME,
         store: redisStore,
         cookie: {
             maxAge: 1000 * 60 * 60 * 24 * 365 * 10,

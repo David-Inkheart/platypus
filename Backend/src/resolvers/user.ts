@@ -1,7 +1,8 @@
 import { User } from "../entities/User";
-import { MyContext } from "src/types";
+import { MyContext } from "../types";
 import { Arg, Ctx, Field, InputType, Mutation, ObjectType, Query, Resolver } from "type-graphql";
 import argon2 from 'argon2';
+import { COOKIE_NAME } from "../constants";
 // import { EntityManager } from "@mikro-orm/postgresql";
 
 // another way of passing arguments to a mutation
@@ -77,8 +78,8 @@ export class UserResolver {
       updatedAt: "",
       password: hashedPassword
     });
-    // let user;
     // alternative way of creating a user with a query builder
+    // let user;
     try {
       // const result = await (em as EntityManager).createQueryBuilder(User).getKnexQuery().insert({
       //   username: options.username,
@@ -140,5 +141,20 @@ export class UserResolver {
     req.session.userId = user.id;
 
     return { user };
+  }
+
+  @Mutation(() => Boolean)
+  logout(
+    @Ctx() { req, res }: MyContext
+  ) {
+    return new Promise((resolve) => req.session.destroy((err: any) => {
+      res.clearCookie(COOKIE_NAME);
+      if (err) {
+        console.log(err);
+        resolve(false);
+        return;
+      }
+      resolve(true);
+    }));
   }
 }
