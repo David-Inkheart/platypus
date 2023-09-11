@@ -60,7 +60,6 @@ UserResponse = __decorate([
 ], UserResponse);
 let UserResolver = exports.UserResolver = class UserResolver {
     async me({ req, em }) {
-        console.log('session: ', req.session);
         if (!req.session.userId) {
             return null;
         }
