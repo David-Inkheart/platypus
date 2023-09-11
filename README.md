@@ -6,4 +6,4 @@ This is a template for a fullstack application using NodeJS, GraphQL, React, Typ
 
 ## Features
 - Backend template using NodeJS, GraphQL, TypeScript, and PostgreSQL
-- Frontend template using React, TypeScript, NextJS,  and chakra-ui
+- Frontend template using React, TypeScript, NextJS, URQL graphql-Client and chakra-ui
