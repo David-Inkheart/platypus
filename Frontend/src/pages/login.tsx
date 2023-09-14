@@ -6,6 +6,8 @@ import InputField from '../components/InputField';
 import { useLoginMutation } from '../generated/graphql';
 import { toErrorMap } from '../utils/toErrorMap';
 import { useRouter } from 'next/router';
+import { withUrqlClient } from 'next-urql';
+import { createUrqlClient } from '../utils/createUrqlClient';
 
 interface loginProps {}
 
@@ -21,6 +23,7 @@ const Login: React.FC<loginProps> = ({ }) => {
           if (response.data?.login.errors) {
             setErrors(toErrorMap(response.data.login.errors));
           } else if (response.data?.login.user) {
+            console.log('response.data?.login.user: ', response.data?.login.user);
             router.push('/');
           }
         }}
@@ -31,8 +34,8 @@ const Login: React.FC<loginProps> = ({ }) => {
               name='username'
               placeholder='username'
               label='Username'
-              // value={props.values.username}
-              // onChange={props.handleChange}
+              value={props.values.username}
+              onChange={props.handleChange}
               // onBlur={handleChange}
             />
             <Box mt={4}>
@@ -40,8 +43,8 @@ const Login: React.FC<loginProps> = ({ }) => {
                 name='password'
                 placeholder='password'
                 label='Password'
-                // value={props.values.password}
-                // onChange={props.handleChange}
+                value={props.values.password}
+                onChange={props.handleChange}
                 type='password'
                 // onBlur={handleChange}
               />
@@ -62,4 +65,4 @@ const Login: React.FC<loginProps> = ({ }) => {
     
 };
 
-export default Login;
+export default withUrqlClient(createUrqlClient)(Login);

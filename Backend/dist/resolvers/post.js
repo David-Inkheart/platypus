@@ -17,7 +17,7 @@ require("reflect-metadata");
 const type_graphql_1 = require("type-graphql");
 const Post_1 = require("../entities/Post");
 let PostResolver = exports.PostResolver = class PostResolver {
-    posts({ em }) {
+    async posts({ em }) {
         return em.find(Post_1.Post, {});
     }
     post(id, { em }) {
