@@ -6,12 +6,12 @@ import { usePostsQuery } from "../generated/graphql";
 const Index = () => {
   const [{data}] = usePostsQuery();
   return (
-    <>
+    < >
       <NavBar />
       <div>Hello World!</div>
       <br />
       {!data ?
-        (<div>loading...</div>) : (data.posts.map((p) => <div key={p.id}>{p.title}</div>)
+        (<div >loading...</div>) : (data.posts.map((p) => <div key={p.id}>{p.title}</div>)
       )}
     </>
   )

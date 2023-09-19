@@ -15,7 +15,7 @@ const Login: React.FC<loginProps> = ({ }) => {
   const router = useRouter();
   const [, login] = useLoginMutation();
   return (
-    <Wrapper variant='small'>
+    <Wrapper variant='small' >
       <Formik
         initialValues={{ username: '', password: '' }}
         onSubmit={async (values, {setErrors}) => {
@@ -34,8 +34,8 @@ const Login: React.FC<loginProps> = ({ }) => {
               name='username'
               placeholder='username'
               label='Username'
-              value={props.values.username}
-              onChange={props.handleChange}
+              // value={props.values.username}
+              // onChange={props.handleChange}
               // onBlur={handleChange}
             />
             <Box mt={4}>
@@ -43,8 +43,8 @@ const Login: React.FC<loginProps> = ({ }) => {
                 name='password'
                 placeholder='password'
                 label='Password'
-                value={props.values.password}
-                onChange={props.handleChange}
+                // value={props.values.password}
+                // onChange={props.handleChange}
                 type='password'
                 // onBlur={handleChange}
               />
