@@ -50,7 +50,7 @@ const main = async () => {
             resolvers: [hello_1.HelloResolver, post_1.PostResolver, user_1.UserResolver],
             validate: false
         }),
-        context: ({ req, res }) => ({ em: orm.em, req, res })
+        context: ({ req, res }) => ({ em: orm.em, req, res, redisClient: redisClient_1.default })
     });
     await apolloServer.start();
     apolloServer.applyMiddleware({ app, cors: false });

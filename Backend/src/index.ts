@@ -13,11 +13,14 @@ import redisClient from "./redisClient";
 import { configDotenv } from "dotenv";
 import { MyContext } from "./types";
 import cors from "cors";
+// import { User } from "./entities/User";
 
 configDotenv();
 
 const main = async () => {
+
   const orm = await MikroORM.init(mikroOrmConfig);
+  // await orm.em.nativeDelete(User, {});
   await orm.getMigrator().up();
 
   const app = express();
@@ -70,7 +73,7 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false
     }),
-    context: ({ req, res }): MyContext => ({ em: orm.em, req, res })
+    context: ({ req, res }): MyContext => ({ em: orm.em, req, res, redisClient })
   });
 
   await apolloServer.start();
