@@ -8,15 +8,15 @@ interface NavBarProps {}
 const NavBar: React.FC<NavBarProps> = ({ }) => {
   // Initialize isClient to false on the server side
   const [isClient, setIsClient] = useState(false);
-  useEffect(() => {
-    setIsClient(true); //Set isClient to true on the client side
-  }, []);
-
   const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
   // get the current user
   const [{ data, fetching }] = useMeQuery({
     pause: isServer(), // if isServer is true, pause the query so that it doesn't render on the server side unnecessarily until isServer is false
   });
+
+  useEffect(() => {
+    setIsClient(true); //Set isClient to true on the client side
+  }, []);
 
   let body = null;
 
