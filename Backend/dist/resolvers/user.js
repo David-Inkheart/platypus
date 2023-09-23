@@ -24,6 +24,7 @@ const UsernamePasswordInput_1 = require("./UsernamePasswordInput");
 const validateRegister_1 = require("../utils/validateRegister");
 const sendEmail_1 = require("../utils/sendEmail");
 const uuid_1 = require("uuid");
+const data_source_1 = __importDefault(require("../data-source"));
 let FieldError = class FieldError {
 };
 __decorate([
@@ -51,7 +52,7 @@ UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], UserResponse);
 let UserResolver = exports.UserResolver = class UserResolver {
-    async changePassword(token, newPassword, { em, redisClient, req }) {
+    async changePassword(token, newPassword, { redisClient, req }) {
         if (newPassword.length <= 3) {
             return {
                 errors: [
@@ -74,7 +75,8 @@ let UserResolver = exports.UserResolver = class UserResolver {
                 ],
             };
         }
-        const user = await em.findOne(User_1.User, { id: parseInt(userId) });
+        const userIdNum = parseInt(userId);
+        const user = await User_1.User.findOne({ where: { id: userIdNum } });
         if (!user) {
             return {
                 errors: [
@@ -86,13 +88,13 @@ let UserResolver = exports.UserResolver = class UserResolver {
             };
         }
         user.password = await argon2_1.default.hash(newPassword);
-        await em.persistAndFlush(user);
+        await User_1.User.update({ id: userIdNum }, { password: user.password });
         redisClient.del(key);
         req.session.userId = user.id;
         return { user };
     }
-    async forgotPassword(email, { em, redisClient }) {
-        const user = await em.findOne(User_1.User, { email });
+    async forgotPassword(email, { redisClient }) {
+        const user = await User_1.User.findOne({ where: { email } });
         if (!user) {
             return true;
         }
@@ -107,30 +109,37 @@ let UserResolver = exports.UserResolver = class UserResolver {
         });
         return true;
     }
-    async me({ req, em }) {
+    me({ req }) {
         if (!req.session.userId) {
             return null;
         }
-        const user = await em.findOne(User_1.User, { id: req.session.userId });
-        return user;
+        return User_1.User.findOne({ where: { id: req.session.userId } });
     }
-    async register(options, { em, req }) {
+    async register(options, { req }) {
         const errors = (0, validateRegister_1.validateRegister)(options);
         if (errors) {
             return { errors };
         }
         const hashedPassword = await argon2_1.default.hash(options.password);
-        const user = em.create(User_1.User, {
-            username: options.username,
-            email: options.email,
-            createdAt: "",
-            updatedAt: "",
-            password: hashedPassword,
-        });
+        let user;
         try {
-            await em.persistAndFlush(user);
+            const result = await data_source_1.default
+                .createQueryBuilder()
+                .insert()
+                .into(User_1.User)
+                .values([
+                {
+                    username: options.username,
+                    password: hashedPassword,
+                    email: options.email,
+                }
+            ])
+                .returning("*")
+                .execute();
+            user = result.raw[0];
         }
         catch (error) {
+            console.log('error: ', error);
             if (error.code === '23505') {
                 return {
                     errors: [
@@ -145,10 +154,12 @@ let UserResolver = exports.UserResolver = class UserResolver {
         req.session.userId = user.id;
         return { user };
     }
-    async login(usernameOrEmail, password, { em, req }) {
-        const user = await em.findOne(User_1.User, usernameOrEmail.includes('@') ?
-            { email: usernameOrEmail }
-            : { username: usernameOrEmail });
+    async login(usernameOrEmail, password, { req }) {
+        const user = await User_1.User.findOne({
+            where: usernameOrEmail.includes('@')
+                ? { email: usernameOrEmail }
+                : { username: usernameOrEmail }
+        });
         if (!user) {
             return {
                 errors: [
@@ -207,7 +218,7 @@ __decorate([
     __param(0, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], UserResolver.prototype, "me", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => UserResponse),

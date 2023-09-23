@@ -1,6 +1,5 @@
-import { MikroORM } from "@mikro-orm/core";
+import "reflect-metadata"
 import { COOKIE_NAME, __prod__ } from "./constants";
-import mikroOrmConfig from "./mikro-orm.config";
 import express from "express";
 import { ApolloServer } from 'apollo-server-express'
 import { buildSchema } from "type-graphql";
@@ -13,15 +12,11 @@ import redisClient from "./redisClient";
 import { configDotenv } from "dotenv";
 import { MyContext } from "./types";
 import cors from "cors";
-// import { User } from "./entities/User";
+import AppDataSource from "./data-source";
 
 configDotenv();
 
 const main = async () => {
-
-  const orm = await MikroORM.init(mikroOrmConfig);
-  // await orm.em.nativeDelete(User, {});
-  await orm.getMigrator().up();
 
   const app = express();
 
@@ -73,7 +68,16 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false
     }),
-    context: ({ req, res }): MyContext => ({ em: orm.em, req, res, redisClient })
+    context: ({ req, res }): MyContext => ({ req, res, redisClient })
+  });
+
+  // initialize data source
+  await AppDataSource.initialize()
+    .then(() => {
+      console.log("Data source initialized.");
+    }
+  ).catch((err) => {
+    console.error(err);
   });
 
   await apolloServer.start();
