@@ -5,7 +5,12 @@ import Layout from "../components/Layout";
 import { Link } from "@chakra-ui/react";
 
 const Index = () => {
-  const [{data}] = usePostsQuery();
+  const [{ data }] = usePostsQuery({
+    variables: {
+      limit: 10,
+      cursor: null
+    }
+  });
   return (
     <Layout>
       <Link color='teal' href='/create-post'>Create Post</Link>

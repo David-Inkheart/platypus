@@ -3,6 +3,7 @@ import { Arg, Ctx, Field, InputType, Int, Mutation, Query, Resolver, UseMiddlewa
 import { Post } from "../entities/Post";
 import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
+import AppDataSource from "../data-source";
 
 @InputType()
 class PostInput {
@@ -16,8 +17,22 @@ class PostInput {
 @Resolver()
 export class PostResolver {
   @Query(() => [Post])
-  async posts(): Promise<Post[]> {
-    return Post.find();
+  async posts(
+    @Arg('limit', () => Int) limit: number,
+    @Arg('cursor', () => String, { nullable: true }) cursor: string | null
+  ): Promise<Post[]> {
+    const realLimit = Math.min(50, limit);
+     const postsQB = AppDataSource
+    .getRepository(Post)
+    .createQueryBuilder("post")
+    .orderBy('"createdAt"', "DESC")
+    .take(realLimit);
+    
+    if (cursor) {
+      postsQB.where('"createdAt" < :cursor', { cursor: new Date(parseInt(cursor)) });
+    }
+
+    return postsQB.getMany();
   }
 
   @Query(() => Post, { nullable: true })
@@ -27,7 +42,7 @@ export class PostResolver {
   }
 
   @Mutation(() => Post)
-  @UseMiddleware(isAuth) // usig an auth middleware in a resolver
+  @UseMiddleware(isAuth) // using an auth middleware in a resolver
   async createPost(
     @Arg('input') input: PostInput,
     @Ctx() { req }: MyContext
