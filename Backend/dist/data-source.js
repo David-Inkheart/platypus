@@ -13,6 +13,7 @@ const AppDataSource = new typeorm_1.DataSource({
     database: 'rgtFullstack2',
     logging: true,
     synchronize: true,
+    migrations: [__dirname + "/migrations/*"],
     entities: [Post_1.Post, User_1.User],
 });
 exports.default = AppDataSource;

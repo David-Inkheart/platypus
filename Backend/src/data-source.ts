@@ -13,6 +13,7 @@ const AppDataSource = new DataSource({
   database: 'rgtFullstack2',
   logging: true,
   synchronize: true,
+  migrations: [__dirname + "/migrations/*"], // path to migrations
   entities: [Post, User],
 });
 
