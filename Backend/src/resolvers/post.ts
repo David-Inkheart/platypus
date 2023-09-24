@@ -1,5 +1,5 @@
 import "reflect-metadata"
-import { Arg, Ctx, Field, InputType, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
+import { Arg, Ctx, Field, FieldResolver, InputType, Int, Mutation, Query, Resolver, Root, UseMiddleware } from "type-graphql";
 import { Post } from "../entities/Post";
 import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
@@ -14,8 +14,12 @@ class PostInput {
   text: string
 }
 
-@Resolver()
+@Resolver(Post)
 export class PostResolver {
+  @FieldResolver(() => String) // graphql field resolver
+  textSnippet(@Root() root: Post) {
+    return root.text.slice(0, 50);
+  }
   @Query(() => [Post])
   async posts(
     @Arg('limit', () => Int) limit: number,

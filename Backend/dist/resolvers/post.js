@@ -35,6 +35,9 @@ PostInput = __decorate([
     (0, type_graphql_1.InputType)()
 ], PostInput);
 let PostResolver = exports.PostResolver = class PostResolver {
+    textSnippet(root) {
+        return root.text.slice(0, 50);
+    }
     async posts(limit, cursor) {
         const realLimit = Math.min(50, limit);
         const postsQB = data_source_1.default
@@ -75,6 +78,13 @@ let PostResolver = exports.PostResolver = class PostResolver {
     }
 };
 __decorate([
+    (0, type_graphql_1.FieldResolver)(() => String),
+    __param(0, (0, type_graphql_1.Root)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Post_1.Post]),
+    __metadata("design:returntype", void 0)
+], PostResolver.prototype, "textSnippet", null);
+__decorate([
     (0, type_graphql_1.Query)(() => [Post_1.Post]),
     __param(0, (0, type_graphql_1.Arg)('limit', () => type_graphql_1.Int)),
     __param(1, (0, type_graphql_1.Arg)('cursor', () => String, { nullable: true })),
@@ -114,6 +124,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "deletePost", null);
 exports.PostResolver = PostResolver = __decorate([
-    (0, type_graphql_1.Resolver)()
+    (0, type_graphql_1.Resolver)(Post_1.Post)
 ], PostResolver);
 //# sourceMappingURL=post.js.map

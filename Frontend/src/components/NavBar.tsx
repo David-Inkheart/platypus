@@ -44,6 +44,7 @@ const NavBar: React.FC<NavBarProps> = ({ }) => {
           }}
           isLoading={logoutFetching}
           variant="link"
+          color="white"
         >
           logout
         </Button>
@@ -52,7 +53,7 @@ const NavBar: React.FC<NavBarProps> = ({ }) => {
   }
 
   return (
-    <Flex zIndex={1} position='sticky' top={0} bg="purple" p={4} ml={"auto"}>
+    <Flex zIndex={1} position='sticky' top={0} bg="cyan.900" p={4} ml={"auto"}>
       <Box ml={"auto"}>
         {body}
       </Box>
