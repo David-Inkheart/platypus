@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { withUrqlClient } from 'next-urql';
 import { createUrqlClient } from '../../utils/createUrqlClient';
 
-const ChangePassword: NextPage<{ token: string }> = ({ token }) => {
+const ChangePassword: NextPage = () => {
   const router = useRouter();
   const [, changePassword] = useChangePasswordMutation();
   const [tokenError, setTokenError] = useState('');
@@ -19,7 +19,7 @@ const ChangePassword: NextPage<{ token: string }> = ({ token }) => {
       <Formik
         initialValues={{ newPassword: '' }}
         onSubmit={async (values, {setErrors}) => {
-          const response = await changePassword({ newPassword: values.newPassword, token });
+          const response = await changePassword({ newPassword: values.newPassword, token: typeof router.query.token === 'string' ? router.query.token : '' });
           if (response.data?.changePassword.errors) {
             const errorMap = toErrorMap(response.data.changePassword.errors);
             if ('token' in errorMap) {
@@ -27,7 +27,6 @@ const ChangePassword: NextPage<{ token: string }> = ({ token }) => {
             }
             setErrors(errorMap);
           } else if (response.data?.changePassword.user) {
-            // console.log('response.data?.login.user: ', response.data?.changePassword.user);
             router.push('/');
           }
         }}
@@ -46,10 +45,6 @@ const ChangePassword: NextPage<{ token: string }> = ({ token }) => {
                 <Link color='teal' href='/forgot-password'>Get a new password here</Link>
               </Box>
             ) : null}
-            {/* <Box mt={4}>
-              {&& (<Box color='red'>{tokenError}</Box>)
-              && (<Link href='/forgot-password'>Get a new password again</Link>)}
-            </Box> */}
             <Button
               mt={4}
               colorScheme='teal'
@@ -65,10 +60,4 @@ const ChangePassword: NextPage<{ token: string }> = ({ token }) => {
   );
 };
 
-ChangePassword.getInitialProps = ({ query }) => {
-  return {
-      token: query.token as string
-  };
-}
-
-export default withUrqlClient(createUrqlClient, { ssr: false })(ChangePassword);
+export default withUrqlClient(createUrqlClient)(ChangePassword);
