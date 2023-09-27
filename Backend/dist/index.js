@@ -56,6 +56,7 @@ const main = async () => {
     }).catch((err) => {
         console.error(err);
     });
+    await data_source_1.default.runMigrations();
     await apolloServer.start();
     apolloServer.applyMiddleware({ app, cors: false });
     app.listen(4000, () => {

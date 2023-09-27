@@ -13,6 +13,7 @@ import { configDotenv } from "dotenv";
 import { MyContext } from "./types";
 import cors from "cors";
 import AppDataSource from "./data-source";
+// import { Post } from "./entities/Post";
 
 configDotenv();
 
@@ -20,7 +21,6 @@ const main = async () => {
 
   const app = express();
 
-  // Initialize redis store.
   const redisStore = new RedisStore({
     client: redisClient,
     prefix: "myapp:",
@@ -29,7 +29,6 @@ const main = async () => {
 
   app.set('trust proxy', 1);
 
-  // Initialize cors.
   app.use(
     cors({
       // origin: '*',
@@ -38,7 +37,6 @@ const main = async () => {
     })
   );
 
-  // Initialize express sesssion storage.
   app.use(
     session({
       name: COOKIE_NAME,
@@ -71,7 +69,6 @@ const main = async () => {
     context: ({ req, res }): MyContext => ({ req, res, redisClient })
   });
 
-  // initialize data source
   await AppDataSource.initialize()
     .then(() => {
       console.log("Data source initialized.");
@@ -79,6 +76,10 @@ const main = async () => {
   ).catch((err) => {
     console.error(err);
   });
+
+  await AppDataSource.runMigrations();
+
+  // await Post.delete({});
 
   await apolloServer.start();
   apolloServer.applyMiddleware({ app, cors: false });
