@@ -1,5 +1,5 @@
 import "reflect-metadata"
-import { Arg, Ctx, Field, FieldResolver, Info, InputType, Int, Mutation, ObjectType, Query, Resolver, Root, UseMiddleware } from "type-graphql";
+import { Arg, Ctx, Field, FieldResolver, InputType, Int, Mutation, ObjectType, Query, Resolver, Root, UseMiddleware } from "type-graphql";
 import { Post } from "../entities/Post";
 import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
@@ -46,19 +46,6 @@ export class PostResolver {
     }
 
     const posts = await getPostsWithCreator({ replacements, cursor });
-
-    //  const postsQB = AppDataSource
-    // .getRepository(Post)
-    // .createQueryBuilder("post")
-    // .innerJoinAndSelect("post.creator", "u", 'u.id = post."creatorId"')
-    // .orderBy('post."createdAt"', "DESC")
-    // .take(realLimitPlusOne);
-    
-    // if (cursor) {
-    //   postsQB.where('"createdAt" < :cursor', { cursor: new Date(parseInt(cursor)) });
-    // }
-
-    // const posts = await postsQB.getMany();
     console.log("posts: ", posts);
 
     return {
