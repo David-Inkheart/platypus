@@ -11,39 +11,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostResolver = void 0;
-require("reflect-metadata");
 const type_graphql_1 = require("type-graphql");
 const Post_1 = require("../entities/Post");
 const isAuth_1 = require("../middleware/isAuth");
-const postsAccess_1 = require("../data/postsAccess");
-let PostInput = class PostInput {
-};
-__decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", String)
-], PostInput.prototype, "title", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", String)
-], PostInput.prototype, "text", void 0);
-PostInput = __decorate([
-    (0, type_graphql_1.InputType)()
-], PostInput);
-let PaginatedPosts = class PaginatedPosts {
-};
-__decorate([
-    (0, type_graphql_1.Field)(() => [Post_1.Post]),
-    __metadata("design:type", Array)
-], PaginatedPosts.prototype, "posts", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", Boolean)
-], PaginatedPosts.prototype, "hasMore", void 0);
-PaginatedPosts = __decorate([
-    (0, type_graphql_1.ObjectType)()
-], PaginatedPosts);
+const data_source_1 = __importDefault(require("../data-source"));
+const post_1 = require("./post");
 let PostResolver = exports.PostResolver = class PostResolver {
     textSnippet(root) {
         return root.text.slice(0, 50);
@@ -55,7 +32,19 @@ let PostResolver = exports.PostResolver = class PostResolver {
         if (cursor) {
             replacements.push(new Date(parseInt(cursor)));
         }
-        const posts = await (0, postsAccess_1.getPostsWithCreator)({ replacements, cursor });
+        const posts = await data_source_1.default.query(`
+        select p.*,
+        json_build_object(
+          'id', u.id,
+          'username', u.username,
+          'email', u.email
+        ) creator
+        from post p
+        inner join public.user u on u.id = p."creatorId"
+        ${cursor ? `where p."createdAt" < $2` : ""}
+        order by p."createdAt" DESC
+        limit $1
+      `, replacements);
         console.log("posts: ", posts);
         return {
             posts: posts.slice(0, realLimit),
@@ -97,7 +86,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PostResolver.prototype, "textSnippet", null);
 __decorate([
-    (0, type_graphql_1.Query)(() => PaginatedPosts),
+    (0, type_graphql_1.Query)(() => post_1.PaginatedPosts),
     __param(0, (0, type_graphql_1.Arg)('limit', () => type_graphql_1.Int)),
     __param(1, (0, type_graphql_1.Arg)('cursor', () => String, { nullable: true })),
     __metadata("design:type", Function),
@@ -117,7 +106,7 @@ __decorate([
     __param(0, (0, type_graphql_1.Arg)('input')),
     __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [PostInput, Object]),
+    __metadata("design:paramtypes", [post_1.PostInput, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "createPost", null);
 __decorate([
@@ -138,4 +127,4 @@ __decorate([
 exports.PostResolver = PostResolver = __decorate([
     (0, type_graphql_1.Resolver)(Post_1.Post)
 ], PostResolver);
-//# sourceMappingURL=post.js.map
+//# sourceMappingURL=PostResolver.js.map
