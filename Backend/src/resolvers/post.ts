@@ -4,6 +4,7 @@ import { Post } from "../entities/Post";
 import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
 import { getPostsWithCreator } from "../data/postsAccess";
+import { Uphoot } from "../entities/Uphoot";
 
 @InputType()
 class PostInput {
@@ -30,6 +31,29 @@ export class PostResolver {
     return root.text.slice(0, 50);
   }
 
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth) // Can only vote if you are logged in
+  async vote(
+    @Arg('postId', () => Int) postId: number,
+    @Arg('value', () => Int) value: number,
+    @Ctx() { req }: MyContext
+  ) {
+    const isUpHoot = value !== -1;
+    const realValue = isUpHoot ? 1 : -1;
+    const { userId } = req.session
+    await Uphoot.insert({
+      userId,
+      postId,
+      value: realValue
+    });
+    await Post.update({
+      id: postId
+    }, {
+      points: () => `points + ${realValue}`
+    });
+      return true;
+    }
+
   @Query(() => PaginatedPosts)
   async posts(
     @Arg('limit', () => Int) limit: number,
@@ -46,7 +70,7 @@ export class PostResolver {
     }
 
     const posts = await getPostsWithCreator({ replacements, cursor });
-    console.log("posts: ", posts);
+    // console.log("posts: ", posts);
 
     return {
       posts: posts.slice(0, realLimit),

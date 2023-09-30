@@ -18,6 +18,7 @@ const type_graphql_1 = require("type-graphql");
 const Post_1 = require("../entities/Post");
 const isAuth_1 = require("../middleware/isAuth");
 const postsAccess_1 = require("../data/postsAccess");
+const Uphoot_1 = require("../entities/Uphoot");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -48,6 +49,22 @@ let PostResolver = exports.PostResolver = class PostResolver {
     textSnippet(root) {
         return root.text.slice(0, 50);
     }
+    async vote(postId, value, { req }) {
+        const isUpHoot = value !== -1;
+        const realValue = isUpHoot ? 1 : -1;
+        const { userId } = req.session;
+        await Uphoot_1.Uphoot.insert({
+            userId,
+            postId,
+            value: realValue
+        });
+        await Post_1.Post.update({
+            id: postId
+        }, {
+            points: () => `points + ${realValue}`
+        });
+        return true;
+    }
     async posts(limit, cursor) {
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
@@ -56,7 +73,6 @@ let PostResolver = exports.PostResolver = class PostResolver {
             replacements.push(new Date(parseInt(cursor)));
         }
         const posts = await (0, postsAccess_1.getPostsWithCreator)({ replacements, cursor });
-        console.log("posts: ", posts);
         return {
             posts: posts.slice(0, realLimit),
             hasMore: posts.length === realLimitPlusOne,
@@ -96,6 +112,16 @@ __decorate([
     __metadata("design:paramtypes", [Post_1.Post]),
     __metadata("design:returntype", void 0)
 ], PostResolver.prototype, "textSnippet", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
+    __param(0, (0, type_graphql_1.Arg)('postId', () => type_graphql_1.Int)),
+    __param(1, (0, type_graphql_1.Arg)('value', () => type_graphql_1.Int)),
+    __param(2, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Number, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "vote", null);
 __decorate([
     (0, type_graphql_1.Query)(() => PaginatedPosts),
     __param(0, (0, type_graphql_1.Arg)('limit', () => type_graphql_1.Int)),

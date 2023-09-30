@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm'
 import { Post } from "./entities/Post";
 import { User } from "./entities/User";
 import { configDotenv } from "dotenv";
+import { Uphoot } from "./entities/Uphoot";
 
 configDotenv();
 
@@ -14,7 +15,7 @@ const AppDataSource = new DataSource({
   logging: true,
   synchronize: true,
   migrations: [__dirname + "/migrations/*"], // path to migrations
-  entities: [Post, User],
+  entities: [Post, User, Uphoot],
 });
 
 export default AppDataSource;

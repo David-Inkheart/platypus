@@ -5,6 +5,7 @@ const typeorm_1 = require("typeorm");
 const Post_1 = require("./entities/Post");
 const User_1 = require("./entities/User");
 const dotenv_1 = require("dotenv");
+const Uphoot_1 = require("./entities/Uphoot");
 (0, dotenv_1.configDotenv)();
 const AppDataSource = new typeorm_1.DataSource({
     type: "postgres",
@@ -14,7 +15,7 @@ const AppDataSource = new typeorm_1.DataSource({
     logging: true,
     synchronize: true,
     migrations: [__dirname + "/migrations/*"],
-    entities: [Post_1.Post, User_1.User],
+    entities: [Post_1.Post, User_1.User, Uphoot_1.Uphoot],
 });
 exports.default = AppDataSource;
 //# sourceMappingURL=data-source.js.map
