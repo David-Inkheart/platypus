@@ -1,9 +1,11 @@
 import { Resolver, cacheExchange } from "@urql/exchange-graphcache";
 import { Exchange, fetchExchange } from "urql";
+import { gql } from '@urql/core';
 import { pipe, tap } from 'wonka';
 import Router from "next/router";
-import { LoginMutation, LogoutMutation, MeDocument, MeQuery, RegisterMutation } from "../generated/graphql";
+import { LoginMutation, LogoutMutation, MeDocument, MeQuery, RegisterMutation, VoteMutationVariables } from "../generated/graphql";
 import { typedUpdateQuery } from "./typedUpdateQuery";
+import { isServer } from "./isServer";
 
 const errorExchange: Exchange = ({ forward }) => ops$ => {
   return pipe(
@@ -102,11 +104,20 @@ const cursorPagination = (): Resolver => {
   };
 };
 
-export const createUrqlClient = (ssrExchange: any) => ({
+export const createUrqlClient = (ssrExchange: any, ctx: any) => {
+  let cookie = '';
+  if (isServer()) {
+    cookie = ctx?.req?.headers?.cookie?.split(';').find((c: string) => c.trim().startsWith('Sid='));
+    // console.log('cookie: ', cookie);
+  }
+  return {
   url: 'http://localhost:4000/graphql',
   fetchOptions: {
     credentials: 'include' as const,
     cache: 'no-cache' as const,
+    headers: cookie ? {
+      cookie,
+    } : undefined,
   },
   exchanges: [
     cacheExchange({
@@ -120,6 +131,44 @@ export const createUrqlClient = (ssrExchange: any) => ({
       },
       updates: {
         Mutation: {
+          vote: (_result, args, cache, info) => {
+            // to update the cache, we need to invalidate the query
+            const { postId, value } = args as VoteMutationVariables;
+            const data = cache.readFragment(
+              gql`
+                fragment _ on Post{
+                  id
+                  points
+                  voteStatus
+                }
+              `,
+              { id: postId } as any
+            );
+            console.log('data: ', data);
+            if (data) {
+              if (data.voteStatus === value) {
+                return;
+              }
+              const newPoints = (data.points as number) + ((!data.voteStatus ? 1 : 2) * value);
+              cache.writeFragment(
+                gql`
+                  fragment __ on Post {
+                    points
+                    voteStatus
+                  }
+                `,
+                { id: postId, points: newPoints, voteStatus: value } as any
+              );
+            }
+          },
+          createPost: (_result, args, cache, info) => {
+            // to update the cache, we need to invalidate the query
+            const allFields = cache.inspectFields('Query');
+            const fieldInfos = allFields.filter(info => info.fieldName === 'posts');
+            fieldInfos.forEach(fi => {
+              cache.invalidate('Query', 'posts', fi.arguments || {});
+            });
+          },
           logout: (result, args, cache, info) => {
             typedUpdateQuery<LogoutMutation, MeQuery>(cache,
               { query: MeDocument },
@@ -164,5 +213,6 @@ export const createUrqlClient = (ssrExchange: any) => ({
   }),
     errorExchange,
     ssrExchange,
-    fetchExchange],
-});
+      fetchExchange],
+  };
+}

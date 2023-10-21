@@ -11,6 +11,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostResolver = void 0;
 require("reflect-metadata");
@@ -18,6 +21,7 @@ const type_graphql_1 = require("type-graphql");
 const Post_1 = require("../entities/Post");
 const isAuth_1 = require("../middleware/isAuth");
 const postsAccess_1 = require("../data/postsAccess");
+const data_source_1 = __importDefault(require("../data-source"));
 const Uphoot_1 = require("../entities/Uphoot");
 let PostInput = class PostInput {
 };
@@ -47,32 +51,71 @@ PaginatedPosts = __decorate([
 ], PaginatedPosts);
 let PostResolver = exports.PostResolver = class PostResolver {
     textSnippet(root) {
-        return root.text.slice(0, 50);
+        return root.text.slice(0, 100);
     }
     async vote(postId, value, { req }) {
         const isUpHoot = value !== -1;
         const realValue = isUpHoot ? 1 : -1;
         const { userId } = req.session;
-        await Uphoot_1.Uphoot.insert({
-            userId,
-            postId,
-            value: realValue
-        });
-        await Post_1.Post.update({
-            id: postId
-        }, {
-            points: () => `points + ${realValue}`
-        });
-        return true;
+        const uphoot = await Uphoot_1.Uphoot.findOne({ where: { postId, userId } });
+        if (uphoot && uphoot.value !== realValue) {
+            await data_source_1.default.transaction(async (txmng) => {
+                await txmng.query(`
+          update uphoot
+          set value = ${realValue}
+          where "userId" = ${userId} and "postId" = ${postId};
+        `);
+                await txmng.query(`
+          update post
+          set points = points + ${2 * realValue}
+          where id = ${postId};
+        `);
+            });
+            return true;
+        }
+        else if (!uphoot) {
+            await data_source_1.default.transaction(async (txmng) => {
+                await txmng.query(`
+          insert into uphoot ("userId", "postId", value)
+          values (${userId}, ${postId}, ${realValue});
+        `);
+                await txmng.query(`
+          update post
+          set points = points + ${realValue}
+          where id = ${postId};
+        `);
+            });
+            return true;
+        }
+        else if (uphoot.value === realValue) {
+            await data_source_1.default.transaction(async (txmng) => {
+                await txmng.query(`
+          delete from uphoot
+          where "userId" = ${userId} and "postId" = ${postId};
+        `);
+                await txmng.query(`
+          update post
+          set points = points - ${realValue}
+          where id = ${postId};
+        `);
+            });
+            return true;
+        }
+        return false;
     }
-    async posts(limit, cursor) {
+    async posts(limit, cursor, { req }) {
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
         const replacements = [realLimitPlusOne];
+        if (req.session.userId) {
+            replacements.push(req.session.userId);
+        }
+        let cursorIdx = 3;
         if (cursor) {
             replacements.push(new Date(parseInt(cursor)));
+            cursorIdx = replacements.length;
         }
-        const posts = await (0, postsAccess_1.getPostsWithCreator)({ replacements, cursor });
+        const posts = await (0, postsAccess_1.getPostsWithCreator)({ replacements, currentUserId: req.session.userId, cursor, cursorIdx });
         return {
             posts: posts.slice(0, realLimit),
             hasMore: posts.length === realLimitPlusOne,
@@ -126,8 +169,9 @@ __decorate([
     (0, type_graphql_1.Query)(() => PaginatedPosts),
     __param(0, (0, type_graphql_1.Arg)('limit', () => type_graphql_1.Int)),
     __param(1, (0, type_graphql_1.Arg)('cursor', () => String, { nullable: true })),
+    __param(2, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "posts", null);
 __decorate([

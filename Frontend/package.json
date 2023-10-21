@@ -7,11 +7,12 @@
     "gen": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
-    "@chakra-ui/icons": "^2.0.2",
+    "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.2.1",
     "@chakra-ui/theme-tools": "^2.0.2",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.9.0",
+    "@urql/core": "^4.1.4",
     "@urql/exchange-graphcache": "^6.3.3",
     "formik": "^2.4.4",
     "framer-motion": "^6.3.0",

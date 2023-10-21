@@ -4,6 +4,7 @@ import { Post } from "../entities/Post";
 import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
 import { getPostsWithCreator } from "../data/postsAccess";
+import AppDataSource from "../data-source";
 import { Uphoot } from "../entities/Uphoot";
 
 @InputType()
@@ -28,7 +29,7 @@ class PaginatedPosts {
 export class PostResolver {
   @FieldResolver(() => String) // graphql field resolver
   textSnippet(@Root() root: Post) {
-    return root.text.slice(0, 50);
+    return root.text.slice(0, 100);
   }
 
   @Mutation(() => Boolean)
@@ -41,23 +42,61 @@ export class PostResolver {
     const isUpHoot = value !== -1;
     const realValue = isUpHoot ? 1 : -1;
     const { userId } = req.session
-    await Uphoot.insert({
-      userId,
-      postId,
-      value: realValue
-    });
-    await Post.update({
-      id: postId
-    }, {
-      points: () => `points + ${realValue}`
-    });
+
+    const uphoot = await Uphoot.findOne({ where: { postId, userId } });
+
+    // if the user has voted on the post before and want to change their vote
+    if (uphoot && uphoot.value !== realValue) {
+      await AppDataSource.transaction(async (txmng) => {
+        await txmng.query(`
+          update uphoot
+          set value = ${realValue}
+          where "userId" = ${userId} and "postId" = ${postId};
+        `);
+        await txmng.query(`
+          update post
+          set points = points + ${2 * realValue}
+          where id = ${postId};
+        `);
+      });
+      return true;
+    } else if (!uphoot) {
+      // if the user has not voted on the post before
+      await AppDataSource.transaction(async (txmng) => {
+        await txmng.query(`
+          insert into uphoot ("userId", "postId", value)
+          values (${userId}, ${postId}, ${realValue});
+        `);
+        await txmng.query(`
+          update post
+          set points = points + ${realValue}
+          where id = ${postId};
+        `);
+      });
+      return true;
+    } else if (uphoot.value === realValue) {
+      // if the user has voted on the post before but want to cancel their vote
+      await AppDataSource.transaction(async (txmng) => {
+        await txmng.query(`
+          delete from uphoot
+          where "userId" = ${userId} and "postId" = ${postId};
+        `);
+        await txmng.query(`
+          update post
+          set points = points - ${realValue}
+          where id = ${postId};
+        `);
+      });
       return true;
     }
+    return false;
+  }
 
   @Query(() => PaginatedPosts)
   async posts(
     @Arg('limit', () => Int) limit: number,
-    @Arg('cursor', () => String, { nullable: true }) cursor: string | null
+    @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
+    @Ctx() { req }: MyContext
   ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
     // try to get one more post than the limit to see if there are more posts
@@ -65,11 +104,17 @@ export class PostResolver {
 
     const replacements: any[] = [realLimitPlusOne];
 
-    if (cursor) {
-      replacements.push(new Date(parseInt(cursor)));
+    if (req.session.userId) {
+      replacements.push(req.session.userId);
     }
 
-    const posts = await getPostsWithCreator({ replacements, cursor });
+    let cursorIdx = 3;
+    if (cursor) {
+      replacements.push(new Date(parseInt(cursor)));
+      cursorIdx = replacements.length;
+    }
+
+    const posts = await getPostsWithCreator({ replacements, currentUserId: req.session.userId, cursor, cursorIdx });
     // console.log("posts: ", posts);
 
     return {

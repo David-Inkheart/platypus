@@ -1,6 +1,6 @@
 import AppDataSource from "../data-source";
 
-export const getPostsWithCreator = ({ replacements, cursor }: { replacements: any[];  cursor: string | null}) => AppDataSource.query(
+export const getPostsWithCreator = ({ replacements, currentUserId, cursor, cursorIdx }: { replacements: any[]; currentUserId: number | undefined; cursor: string | null;  cursorIdx: number }) => AppDataSource.query(
       `
         select p.*,
         json_build_object(
@@ -9,10 +9,15 @@ export const getPostsWithCreator = ({ replacements, cursor }: { replacements: an
           'email', u.email,
           'createdAt', u."createdAt",
           'updatedAt', u."updatedAt"
-        ) creator
+        ) creator,
+        ${
+          currentUserId 
+          ? '(select value from uphoot where "userId" = $2 and "postId" = p.id) "voteStatus"' 
+          : 'null as "voteStatus"'
+        }
         from post p
         inner join public.user u on u.id = p."creatorId"
-        ${cursor ? `where p."createdAt" < $2` : ""}
+        ${cursor ? `where p."createdAt" < $${cursorIdx}` : ""}
         order by p."createdAt" DESC
         limit $1
       `, replacements

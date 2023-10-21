@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, BaseEntity, ManyToOne, OneToMany } from "typeorm";
-import { Field, ObjectType } from "type-graphql";
+import { Field, Int, ObjectType } from "type-graphql";
 import { User } from "./User";
 import { Uphoot } from "./Uphoot";
 
@@ -22,7 +22,11 @@ export class Post extends BaseEntity {
   @Column({ type: "int", default: 0})
   points!: number;
 
-  @Field() // Field is used to expose the field to the graphql schema
+  // only graphql field/schema value, not a database field
+  @Field(() => Int, { nullable: true })
+  voteStatus: number | null; // 1 or -1 or null
+
+  @Field() // used to expose the field to the graphql schema
   @Column()
   creatorId: number;
 

@@ -2,12 +2,14 @@ import { withUrqlClient } from "next-urql"
 import { createUrqlClient } from "../utils/createUrqlClient"
 import { usePostsQuery } from "../generated/graphql";
 import Layout from "../components/Layout";
-import { Box, Button, Flex, Heading, Link, Stack, Text, others } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Link, Stack, Text } from "@chakra-ui/react";
 import { useState } from "react";
+import { VoteSection } from "../components/VoteSection";
 
 const Index = () => {
   const [variables, setVariables] = useState({
-    limit: 33, cursor: null as null | string
+    limit: 15,
+    cursor: null as null | string
   });
 
   const [{ data, fetching }] = usePostsQuery({
@@ -31,11 +33,15 @@ const Index = () => {
         ) : (
           <Stack spacing={8}>
             {data!.posts.posts.map((p) => 
-              (<Box key={p.id} p={5} shadow='md' borderWidth='1px'>
-              <Heading fontSize='xl'>{p.title}</Heading>
-              <Text mt={4}>{p.textSnippet}...</Text>
-                {/* <Text mt={4}>{p.text.slice(0, 50)}...</Text> */}
-              </Box>
+              (<Flex align={'center'} key={p.id} p={5} shadow='md'  borderWidth='1px'>
+                <VoteSection post={p} />
+                <Box mx={10} >
+                  <Heading fontSize='xl'>{p.title}</Heading>
+                  <Text mt={4}>{p.textSnippet}...</Text>
+                  {/* <Text mt={4}>{p.text.slice(0, 100)}...</Text> */}
+                </Box>
+                <Text ml='auto' color={'gray'}>posted by {p.creator.username}</Text>
+              </Flex>
             ))}
           </Stack>
         )
