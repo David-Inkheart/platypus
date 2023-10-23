@@ -2,7 +2,9 @@ import { withUrqlClient } from "next-urql"
 import { createUrqlClient } from "../utils/createUrqlClient"
 import { usePostsQuery } from "../generated/graphql";
 import Layout from "../components/Layout";
+import NextLink from 'next/link';
 import { Box, Button, Flex, Heading, Link, Stack, Text } from "@chakra-ui/react";
+import { Link as NewLink } from '@chakra-ui/next-js'
 import { useState } from "react";
 import { VoteSection } from "../components/VoteSection";
 
@@ -22,11 +24,6 @@ const Index = () => {
 
   return (
     <Layout>
-      <Flex align='center' color='teal'>
-        <Heading>PlatyPus</Heading>
-        <Link href='/create-post' ml='auto'>Create Post</Link>
-      </Flex>
-      <br />
       {!data && fetching ?
         (
           <div >loading...</div>
@@ -36,7 +33,14 @@ const Index = () => {
               (<Flex align={'center'} key={p.id} p={5} shadow='md'  borderWidth='1px'>
                 <VoteSection post={p} />
                 <Box mx={10} >
-                  <Heading fontSize='xl'>{p.title}</Heading>
+                <NewLink
+                  as={NextLink}
+                  href={`/post/${p.id}`}
+                  // color={'teal'}
+                >
+                  {/* This is a hack to get the link to work with the NextLink component */}
+                    <Heading fontSize='xl'>{p.title}</Heading>
+                  </NewLink>
                   <Text mt={4}>{p.textSnippet}...</Text>
                   {/* <Text mt={4}>{p.text.slice(0, 100)}...</Text> */}
                 </Box>

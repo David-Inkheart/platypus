@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Link } from '@chakra-ui/react';
+import { Box, Button, Flex, Heading, Link } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { useLogoutMutation, useMeQuery } from '../generated/graphql';
 import { isServer } from '../utils/isServer';
@@ -36,8 +36,18 @@ const NavBar: React.FC<NavBarProps> = ({ }) => {
   } else {
     // if isClient is true, render, else set body to null
     body = isClient ? (
-      <Flex>
-        <Box ml={"auto"} mr={2} color="white"> Welcome {data.me.username}</Box>
+      <Flex align={'center'}>
+        <Box ml={"auto"} mr={2} color="white"> Welcome {data.me.username.toLocaleUpperCase()}</Box>
+        <Button
+          as={Link}
+          href='/create-post'
+          mx={4}
+          color="white"
+          _hover={{ color: 'teal', bg: 'white' }}
+          variant="outline"
+        >
+          Create Post
+        </Button>
         <Button
           onClick={() => {
             logout({});
@@ -53,10 +63,19 @@ const NavBar: React.FC<NavBarProps> = ({ }) => {
   }
 
   return (
-    <Flex zIndex={1} position='sticky' top={0} bg="cyan.900" p={4} ml={"auto"}>
-      <Box ml={"auto"}>
-        {body}
-      </Box>
+    <Flex
+      zIndex={1}
+      position='sticky'
+      top={0}
+      bg="cyan.900"
+      p={4}
+    >
+      <Flex flex={1} align={'center'} m={'auto'} maxW={800}>
+        <Link href='/' color={'white'}>
+         <Heading>PlatyPus</Heading>
+        </Link>
+        <Box ml={"auto"}>{body}</Box>
+      </Flex>
     </Flex>
   );
 };

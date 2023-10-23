@@ -115,7 +115,7 @@ export type Query = {
 
 
 export type QueryPostArgs = {
-  id: Scalars['Float']['input'];
+  id: Scalars['Int']['input'];
 };
 
 
@@ -207,6 +207,13 @@ export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type MeQuery = { __typename?: 'Query', me?: { __typename?: 'User', id: number, username: string } | null };
+
+export type PostQueryVariables = Exact<{
+  id: Scalars['Int']['input'];
+}>;
+
+
+export type PostQuery = { __typename?: 'Query', post?: { __typename?: 'Post', id: number, title: string, text: string, points: number, voteStatus?: number | null, createdAt: string, updatedAt: string, creator: { __typename?: 'User', id: number, username: string } } | null };
 
 export type PostsQueryVariables = Exact<{
   limit: Scalars['Int']['input'];
@@ -341,6 +348,27 @@ export const MeDocument = gql`
 
 export function useMeQuery(options?: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'query'>) {
   return Urql.useQuery<MeQuery, MeQueryVariables>({ query: MeDocument, ...options });
+};
+export const PostDocument = gql`
+    query Post($id: Int!) {
+  post(id: $id) {
+    id
+    title
+    text
+    points
+    voteStatus
+    createdAt
+    updatedAt
+    creator {
+      id
+      username
+    }
+  }
+}
+    `;
+
+export function usePostQuery(options: Omit<Urql.UseQueryArgs<PostQueryVariables>, 'query'>) {
+  return Urql.useQuery<PostQuery, PostQueryVariables>({ query: PostDocument, ...options });
 };
 export const PostsDocument = gql`
     query Posts($limit: Int!, $cursor: String) {

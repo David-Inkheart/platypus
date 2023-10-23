@@ -122,7 +122,7 @@ let PostResolver = exports.PostResolver = class PostResolver {
         };
     }
     async post(id) {
-        const post = await Post_1.Post.findOne({ where: { id } });
+        const post = await Post_1.Post.findOne({ where: { id }, relations: ['creator'] });
         return post || undefined;
     }
     async createPost(input, { req }) {
@@ -176,7 +176,7 @@ __decorate([
 ], PostResolver.prototype, "posts", null);
 __decorate([
     (0, type_graphql_1.Query)(() => Post_1.Post, { nullable: true }),
-    __param(0, (0, type_graphql_1.Arg)('id')),
+    __param(0, (0, type_graphql_1.Arg)('id', () => type_graphql_1.Int)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)

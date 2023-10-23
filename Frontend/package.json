@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
+    "@chakra-ui/next-js": "^2.1.5",
     "@chakra-ui/react": "^2.2.1",
     "@chakra-ui/theme-tools": "^2.0.2",
     "@emotion/react": "^11.9.0",
