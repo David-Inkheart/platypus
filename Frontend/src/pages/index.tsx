@@ -1,13 +1,13 @@
-import { withUrqlClient } from "next-urql"
-import { createUrqlClient } from "../utils/createUrqlClient"
-import { useDeletePostMutation, usePostsQuery } from "../generated/graphql";
-import Layout from "../components/Layout";
+import { Link as NewLink } from '@chakra-ui/next-js';
+import { Box, Button, Flex, Heading, Stack, Text } from "@chakra-ui/react";
+import { withUrqlClient } from "next-urql";
 import NextLink from 'next/link';
-import { Box, Button, Flex, Heading, IconButton, Stack, Text } from "@chakra-ui/react";
-import { Link as NewLink } from '@chakra-ui/next-js'
 import { useState } from "react";
+import Layout from "../components/Layout";
+import UpdateDeletePostButtons from "../components/UpdateDeletePostButtons";
 import { VoteSection } from "../components/VoteSection";
-import { DeleteIcon } from "@chakra-ui/icons";
+import { useMeQuery, usePostsQuery } from "../generated/graphql";
+import { createUrqlClient } from "../utils/createUrqlClient";
 
 const Index = () => {
   const [variables, setVariables] = useState({
@@ -18,8 +18,6 @@ const Index = () => {
   const [{ data, fetching }] = usePostsQuery({
     variables,
   });
-
-  const [,deletePost] = useDeletePostMutation();
 
   if (!fetching && !data) {
     return <div>Query failed for some reason</div>
@@ -41,23 +39,15 @@ const Index = () => {
                     as={NextLink}
                     href={`/post/${p.id}`}
                   >
-                  {/* This is a hack to get the link to work with the NextLink component */}
+                  {/* NewLink is a hack to get the link to work with the NextLink component */}
                     <Heading fontSize='xl'>{p.title}</Heading>
                   </NewLink>
                   <Text mt={4}>{p.textSnippet}...</Text>
-                  {/* <Text mt={4}>{p.text.slice(0, 100)}...</Text> */}
                   <Flex align={'center'}>
-                  <Text color={'gray'}>posted by {p.creator.username}</Text>
-                    <IconButton
-                      ml={'auto'}
-                      colorScheme={'red'}
-                      variant={'outline'}
-                      aria-label="Delete Post"
-                      icon={<DeleteIcon color={'red'} />}
-                      size={"sm"}
-                      // onClick={() => console.log('TAda!!!')}
-                      onClick={() => deletePost({ id: p.id })}
-                    />
+                    <Text color={'gray'}>posted by {p.creator.username}</Text>
+                    <Box ml='auto'>
+                      <UpdateDeletePostButtons id={p.id} creatorId={p.creator.id} />
+                    </Box>
                   </Flex>
                 </Box>
               </Flex>

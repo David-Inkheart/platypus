@@ -22,7 +22,6 @@ const Post_1 = require("../entities/Post");
 const isAuth_1 = require("../middleware/isAuth");
 const postsAccess_1 = require("../data/postsAccess");
 const data_source_1 = __importDefault(require("../data-source"));
-const Uphoot_1 = require("../entities/Uphoot");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -57,7 +56,11 @@ let PostResolver = exports.PostResolver = class PostResolver {
         const isUpHoot = value !== -1;
         const realValue = isUpHoot ? 1 : -1;
         const { userId } = req.session;
-        const uphoot = await Uphoot_1.Uphoot.findOne({ where: { postId, userId } });
+        const uphoot = await data_source_1.default.query(`
+      select * from uphoot
+      where "postId" = ${postId} and "userId" = ${userId}
+      for update;
+    `);
         if (uphoot && uphoot.value !== realValue) {
             await data_source_1.default.transaction(async (txmng) => {
                 await txmng.query(`
@@ -128,15 +131,18 @@ let PostResolver = exports.PostResolver = class PostResolver {
     async createPost(input, { req }) {
         return Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save();
     }
-    async updatePost(id, title) {
-        const post = await Post_1.Post.findOne({ where: { id } });
-        if (!post) {
-            return null;
-        }
-        if (typeof title !== 'undefined') {
-            await Post_1.Post.update({ id }, { title });
-        }
-        return post;
+    async updatePost(id, title, text, { req }) {
+        const result = await data_source_1.default
+            .createQueryBuilder()
+            .update(Post_1.Post)
+            .set({ title, text })
+            .where('id = :id and "creatorId" = :creatorId', {
+            id,
+            creatorId: req.session.userId,
+        })
+            .returning('*')
+            .execute();
+        return result.raw[0];
     }
     async deletePost(id, { req }) {
         try {
@@ -192,10 +198,13 @@ __decorate([
 ], PostResolver.prototype, "createPost", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Post_1.Post, { nullable: true }),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
     __param(0, (0, type_graphql_1.Arg)('id', () => type_graphql_1.Int)),
-    __param(1, (0, type_graphql_1.Arg)('title', () => String, { nullable: true })),
+    __param(1, (0, type_graphql_1.Arg)('title')),
+    __param(2, (0, type_graphql_1.Arg)('text')),
+    __param(3, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:paramtypes", [Number, String, String, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "updatePost", null);
 __decorate([

@@ -55,7 +55,6 @@ const CreatePost: React.FC<{}> = ({ }) => {
           )}
         </Formik>
     </Layout>
-    
   );
 };
 

@@ -1,34 +1,71 @@
 import { withUrqlClient } from 'next-urql';
 import { createUrqlClient } from '../../utils/createUrqlClient';
-import { useRouter } from 'next/router';
-import { usePostQuery } from '../../generated/graphql';
 import Layout from '../../components/Layout';
-import { Heading } from '@chakra-ui/react';
+import { Box, Flex, Heading, Text } from '@chakra-ui/react';
+import { useGetPostFromUrl } from '../../utils/useGetPostFromUrl';
+import { formatTimestampToHumanDate } from '../../utils/timeStampToDate';
+import UpdateDeletePostButtons from '../../components/UpdateDeletePostButtons';
 
-const Post = ({ }) => {
-  const router = useRouter();
-  const intId = typeof router.query.id === 'string' ? parseInt(router.query.id) : -1;
-  const [{ data, fetching }] = usePostQuery({
-    pause: intId === -1,
-    variables: {
-      id: intId,
-    },
-  });
+const Post = () => {
+  const [{ data, error, fetching }] = useGetPostFromUrl();
 
-  return (
+  if (fetching) {
+    return <Layout><div>Loading...</div></Layout>;
+  }
+
+  if (error) {
+    return <Layout><div>{error.message}</div></Layout>;
+  }
+
+  if (!data?.post) {
+    return <Layout><div>Could not find post</div></Layout>;
+  }
+
+  const { title, text, createdAt, updatedAt } = data.post;
+  const isEdited = updatedAt !== createdAt;
+
+return (
     <Layout>
-      {fetching
-        ? (<div>loading...</div>)
-        : !data?.post
-          ? (<div>Could not find post</div>)
-          : (
-            <div>
-              <Heading mb={4}>{data.post.title}</Heading>
-              {data.post.text}
-            </div>
-      )}
+      <Box
+        justifyContent={'center'}
+        alignContent={'center'}
+        bg="gray.100"
+        p={4}
+        mb={4}
+        borderRadius="md"
+      >
+        <Heading
+          as="h1"
+          size="lg"
+          mb={4}
+          // color="white"
+        >
+            {title}
+          </Heading>
+        <Text
+          fontSize="lg"
+          // color="white"
+        >
+          {text}
+        </Text>
+        <Flex align={'center'} >
+          {isEdited && (
+            <Text 
+              fontSize="sm" 
+              mt={4} 
+              color="gray"
+              >
+              Edited on {formatTimestampToHumanDate(parseInt(updatedAt))}
+            </Text>
+          )}
+          <Box ml='auto'>
+            <UpdateDeletePostButtons id={data.post.id} creatorId={data.post.creator.id} />
+          </Box>
+        </Flex>
+      </Box>
     </Layout>
   );
 };
 
 export default withUrqlClient(createUrqlClient, { ssr: true })(Post);
+

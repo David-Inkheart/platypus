@@ -5,7 +5,7 @@ import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
 import { getPostsWithCreator } from "../data/postsAccess";
 import AppDataSource from "../data-source";
-import { Uphoot } from "../entities/Uphoot";
+// import { Uphoot } from "../entities/Uphoot";
 
 @InputType()
 class PostInput {
@@ -43,7 +43,13 @@ export class PostResolver {
     const realValue = isUpHoot ? 1 : -1;
     const { userId } = req.session
 
-    const uphoot = await Uphoot.findOne({ where: { postId, userId } });
+    // raw sql to select for update so that we can lock the row
+    const uphoot = await AppDataSource.query(`
+      select * from uphoot
+      where "postId" = ${postId} and "userId" = ${userId}
+      for update;
+    `);
+    // const uphoot = await Uphoot.findOne({ where: { postId, userId } });
 
     // if the user has voted on the post before and want to change their vote
     if (uphoot && uphoot.value !== realValue) {
@@ -142,20 +148,28 @@ export class PostResolver {
   }
 
   @Mutation(() => Post, { nullable: true })
+  @UseMiddleware(isAuth)
   async updatePost(
     @Arg('id', () => Int) id: number,
-    @Arg('title', () => String, { nullable: true }) title: string): Promise<Post | null>
+    @Arg('title') title: string,
+    @Arg('text') text: string,
+    @Ctx() { req }: MyContext
+) : Promise<Post | null>
   {
-    const post = await Post.findOne({ where: { id } });
-    if (!post) {
-      return null;
-    }
-    if (typeof title !== 'undefined') {
-      await Post.update({ id }, { title });
-    }
-    return post;
-  }
+  const result =  await AppDataSource
+    .createQueryBuilder()
+    .update(Post)
+    .set({ title, text })
+      .where('id = :id and "creatorId" = :creatorId', {
+        id,
+        creatorId: req.session.userId,
+      })
+    .returning('*')
+    .execute()
 
+    return result.raw[0];
+  }
+      
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
   async deletePost(
