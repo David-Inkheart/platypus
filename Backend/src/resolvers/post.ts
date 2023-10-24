@@ -157,13 +157,28 @@ export class PostResolver {
   }
 
   @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
   async deletePost(
-    @Arg('id', () => Int) id: number): Promise<boolean> {
+    @Arg('id', () => Int) id: number,
+    @Ctx() { req }: MyContext
+    ): Promise<boolean> {
     try {
-      await Post.delete({ id });
+      // delete relational data first if not using cascade way
+      // const post = await Post.findOne({ where: { id } });
+      // if (!post) {
+      //   return false;
+      // }
+      // if (post.creatorId !== req.session.userId) {
+      //   throw new Error('not authorized');
+      // }
+      // await Uphoot.delete({ postId: id });
+      // await Post.delete({ id });
+
+      // delete can be done straight for cascade way
+      await Post.delete({ id, creatorId: req.session.userId });
       return true;
     } catch (error) {
-      return false;
+      return error
     }
   }
 }

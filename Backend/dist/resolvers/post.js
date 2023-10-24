@@ -138,13 +138,13 @@ let PostResolver = exports.PostResolver = class PostResolver {
         }
         return post;
     }
-    async deletePost(id) {
+    async deletePost(id, { req }) {
         try {
-            await Post_1.Post.delete({ id });
+            await Post_1.Post.delete({ id, creatorId: req.session.userId });
             return true;
         }
         catch (error) {
-            return false;
+            return error;
         }
     }
 };
@@ -200,9 +200,11 @@ __decorate([
 ], PostResolver.prototype, "updatePost", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Boolean),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
     __param(0, (0, type_graphql_1.Arg)('id', () => type_graphql_1.Int)),
+    __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "deletePost", null);
 exports.PostResolver = PostResolver = __decorate([

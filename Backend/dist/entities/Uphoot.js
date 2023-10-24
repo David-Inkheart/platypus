@@ -38,7 +38,9 @@ __decorate([
 ], Uphoot.prototype, "postId", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => Post_1.Post),
-    (0, typeorm_1.ManyToOne)(() => Post_1.Post),
+    (0, typeorm_1.ManyToOne)(() => Post_1.Post, (post) => post.uphoots, {
+        onDelete: "CASCADE",
+    }),
     __metadata("design:type", Post_1.Post)
 ], Uphoot.prototype, "post", void 0);
 exports.Uphoot = Uphoot = __decorate([

@@ -3,7 +3,7 @@ import { Exchange, fetchExchange } from "urql";
 import { gql } from '@urql/core';
 import { pipe, tap } from 'wonka';
 import Router from "next/router";
-import { LoginMutation, LogoutMutation, MeDocument, MeQuery, RegisterMutation, VoteMutationVariables } from "../generated/graphql";
+import { DeletePostMutationVariables, LoginMutation, LogoutMutation, MeDocument, MeQuery, RegisterMutation, VoteMutationVariables } from "../generated/graphql";
 import { typedUpdateQuery } from "./typedUpdateQuery";
 import { isServer } from "./isServer";
 
@@ -131,6 +131,12 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
       },
       updates: {
         Mutation: {
+          deletePost: (_result, args, cache, info) => {
+            cache.invalidate({
+              __typename: 'Post',
+              id: (args as DeletePostMutationVariables).id
+            });
+          },
           vote: (_result, args, cache, info) => {
             // to update the cache, we need to invalidate the query
             const { postId, value } = args as VoteMutationVariables;

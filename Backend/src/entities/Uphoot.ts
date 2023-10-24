@@ -25,6 +25,9 @@ export class Uphoot extends BaseEntity {
   postId: number;
 
   @Field(() => Post)
-  @ManyToOne(() => Post)
+  @ManyToOne(() => Post, (post) => post.uphoots, {
+    // cascade: true,
+    onDelete: "CASCADE",
+  })
   post: Post;
 }
