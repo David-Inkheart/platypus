@@ -11,7 +11,6 @@ export function formatTimestampToHumanDate(timestamp: number): string {
 
   return `${dayOfWeek} ${day}${getDaySuffix(day)}, ${month}, ${year}`;
 }
-
 // Function to get the day suffix (e.g., "st", "nd", "rd", "th")
 function getDaySuffix(day: number): string {
   if (day >= 11 && day <= 13) {

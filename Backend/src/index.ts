@@ -13,7 +13,6 @@ import { configDotenv } from "dotenv";
 import { MyContext } from "./types";
 import cors from "cors";
 import AppDataSource from "./data-source";
-// import { Post } from "./entities/Post";
 
 configDotenv();
 
@@ -78,8 +77,6 @@ const main = async () => {
   });
 
   await AppDataSource.runMigrations();
-
-  // await Post.delete({});
 
   await apolloServer.start();
   apolloServer.applyMiddleware({ app, cors: false });
