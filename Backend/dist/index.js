@@ -17,6 +17,7 @@ const redisClient_1 = __importDefault(require("./redisClient"));
 const dotenv_1 = require("dotenv");
 const cors_1 = __importDefault(require("cors"));
 const data_source_1 = __importDefault(require("./data-source"));
+const createUserLoader_1 = require("./utils/createUserLoader");
 (0, dotenv_1.configDotenv)();
 const main = async () => {
     const app = (0, express_1.default)();
@@ -48,7 +49,12 @@ const main = async () => {
             resolvers: [hello_1.HelloResolver, post_1.PostResolver, user_1.UserResolver],
             validate: false
         }),
-        context: ({ req, res }) => ({ req, res, redisClient: redisClient_1.default })
+        context: ({ req, res }) => ({
+            req,
+            res,
+            redisClient: redisClient_1.default,
+            userLoader: (0, createUserLoader_1.createUserLoader)(),
+        })
     });
     await data_source_1.default.initialize()
         .then(() => {

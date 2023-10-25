@@ -5,6 +5,7 @@ import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
 import { getPostsWithCreator } from "../data/postsAccess";
 import AppDataSource from "../data-source";
+import { User } from "../entities/User";
 // import { Uphoot } from "../entities/Uphoot";
 
 @InputType()
@@ -28,9 +29,19 @@ class PaginatedPosts {
 @Resolver(Post)
 export class PostResolver {
   @FieldResolver(() => String) // graphql field resolver
-  textSnippet(@Root() root: Post) {
-    return root.text.slice(0, 100);
+  textSnippet(@Root() post: Post) {
+    return post.text.slice(0, 100);
   }
+
+  @FieldResolver(() => User) 
+  creator(@Root() post: Post,
+  @Ctx() { userLoader }: MyContext
+  ) {
+    return userLoader.load(post.creatorId);
+  }
+
+  @FieldResolver(() => Int, { nullable: true })
+  // TODO: implement voteStatus field resolver
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth) // Can only vote if you are logged in
@@ -121,7 +132,6 @@ export class PostResolver {
     }
 
     const posts = await getPostsWithCreator({ replacements, currentUserId: req.session.userId, cursor, cursorIdx });
-    // console.log("posts: ", posts);
 
     return {
       posts: posts.slice(0, realLimit),
@@ -131,7 +141,7 @@ export class PostResolver {
 
   @Query(() => Post, { nullable: true })
   async post(@Arg('id', () => Int) id: number): Promise<Post | undefined> {
-    const post = await Post.findOne({ where: { id }, relations: ['creator'] });
+    const post = await Post.findOne({ where: { id } });
     return post || undefined;
   }
 

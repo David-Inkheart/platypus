@@ -22,6 +22,7 @@ const Post_1 = require("../entities/Post");
 const isAuth_1 = require("../middleware/isAuth");
 const postsAccess_1 = require("../data/postsAccess");
 const data_source_1 = __importDefault(require("../data-source"));
+const User_1 = require("../entities/User");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -49,8 +50,11 @@ PaginatedPosts = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], PaginatedPosts);
 let PostResolver = exports.PostResolver = class PostResolver {
-    textSnippet(root) {
-        return root.text.slice(0, 100);
+    textSnippet(post) {
+        return post.text.slice(0, 100);
+    }
+    creator(post, { userLoader }) {
+        return userLoader.load(post.creatorId);
     }
     async vote(postId, value, { req }) {
         const isUpHoot = value !== -1;
@@ -125,7 +129,7 @@ let PostResolver = exports.PostResolver = class PostResolver {
         };
     }
     async post(id) {
-        const post = await Post_1.Post.findOne({ where: { id }, relations: ['creator'] });
+        const post = await Post_1.Post.findOne({ where: { id } });
         return post || undefined;
     }
     async createPost(input, { req }) {
@@ -162,6 +166,15 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PostResolver.prototype, "textSnippet", null);
 __decorate([
+    (0, type_graphql_1.FieldResolver)(() => User_1.User),
+    __param(0, (0, type_graphql_1.Root)()),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Post_1.Post, Object]),
+    __metadata("design:returntype", void 0)
+], PostResolver.prototype, "creator", null);
+__decorate([
+    (0, type_graphql_1.FieldResolver)(() => type_graphql_1.Int, { nullable: true }),
     (0, type_graphql_1.Mutation)(() => Boolean),
     (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
     __param(0, (0, type_graphql_1.Arg)('postId', () => type_graphql_1.Int)),

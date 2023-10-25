@@ -13,6 +13,7 @@ import { configDotenv } from "dotenv";
 import { MyContext } from "./types";
 import cors from "cors";
 import AppDataSource from "./data-source";
+import { createUserLoader } from "./utils/createUserLoader";
 
 configDotenv();
 
@@ -65,7 +66,12 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false
     }),
-    context: ({ req, res }): MyContext => ({ req, res, redisClient })
+    context: ({ req, res }): MyContext => ({
+      req,
+      res,
+      redisClient,
+      userLoader: createUserLoader(),
+    })
   });
 
   await AppDataSource.initialize()
