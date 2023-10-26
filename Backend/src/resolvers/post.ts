@@ -3,16 +3,15 @@ import { Arg, Ctx, Field, FieldResolver, InputType, Int, Mutation, ObjectType, Q
 import { Post } from "../entities/Post";
 import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
-import { getPostsWithCreator } from "../data/postsAccess";
+// import { getPostsWithCreator } from "../data/postsAccess";
 import AppDataSource from "../data-source";
 import { User } from "../entities/User";
-// import { Uphoot } from "../entities/Uphoot";
+import { Uphoot } from "../entities/Uphoot";
 
 @InputType()
 class PostInput {
   @Field()
   title: string
-
   @Field()
   text: string
 }
@@ -21,7 +20,6 @@ class PostInput {
 class PaginatedPosts {
   @Field(() => [Post]) // graphql typed field
   posts: Post[] // typescript typed field
-
   @Field() // graphql field
   hasMore: boolean
 }
@@ -29,19 +27,31 @@ class PaginatedPosts {
 @Resolver(Post)
 export class PostResolver {
   @FieldResolver(() => String) // graphql field resolver
-  textSnippet(@Root() post: Post) {
-    return post.text.slice(0, 100);
+  textSnippet(@Root() root: Post) {
+    return root.text.slice(0, 100);
   }
 
-  @FieldResolver(() => User) 
-  creator(@Root() post: Post,
-  @Ctx() { userLoader }: MyContext
-  ) {
+  @FieldResolver(() => User)
+  creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
     return userLoader.load(post.creatorId);
   }
 
   @FieldResolver(() => Int, { nullable: true })
-  // TODO: implement voteStatus field resolver
+  async voteStatus(
+    @Root() post: Post,
+    @Ctx() { uphootLoader, req }: MyContext
+  ) {
+    if (!req.session.userId) {
+      return null;
+    }
+
+    const uphoot = await uphootLoader.load({
+      postId: post.id,
+      userId: req.session.userId,
+    });
+
+    return uphoot ? uphoot.value : null;
+  }
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth) // Can only vote if you are logged in
@@ -55,58 +65,57 @@ export class PostResolver {
     const { userId } = req.session
 
     // raw sql to select for update so that we can lock the row
-    const uphoot = await AppDataSource.query(`
-      select * from uphoot
-      where "postId" = ${postId} and "userId" = ${userId}
-      for update;
-    `);
-    // const uphoot = await Uphoot.findOne({ where: { postId, userId } });
+    // const uphoot = await AppDataSource.query(`
+    //   select * from uphoot
+    //   where "postId" = ${postId} and "userId" = ${userId}
+    //   for update;
+    // `);
+    const uphoot = await Uphoot.findOne({ where: { postId, userId } });
 
-    // if the user has voted on the post before and want to change their vote
+    // the user has voted on the post before
+    // and they are changing their vote
     if (uphoot && uphoot.value !== realValue) {
-      await AppDataSource.transaction(async (txmng) => {
-        await txmng.query(`
-          update uphoot
-          set value = ${realValue}
-          where "userId" = ${userId} and "postId" = ${postId};
-        `);
-        await txmng.query(`
+      await AppDataSource.transaction(async (tm) => {
+        await tm.query(
+          `
+    update uphoot
+    set value = $1
+    where "postId" = $2 and "userId" = $3
+        `,
+          [realValue, postId, userId]
+        );
+
+        await tm.query(
+          `
           update post
-          set points = points + ${2 * realValue}
-          where id = ${postId};
-        `);
+          set points = points + $1
+          where id = $2
+        `,
+          [2 * realValue, postId]
+        );
       });
-      return true;
     } else if (!uphoot) {
-      // if the user has not voted on the post before
-      await AppDataSource.transaction(async (txmng) => {
-        await txmng.query(`
-          insert into uphoot ("userId", "postId", value)
-          values (${userId}, ${postId}, ${realValue});
-        `);
-        await txmng.query(`
-          update post
-          set points = points + ${realValue}
-          where id = ${postId};
-        `);
+      // has never voted before
+      await AppDataSource.transaction(async (tm) => {
+        await tm.query(
+          `
+    insert into uphoot ("userId", "postId", value)
+    values ($1, $2, $3)
+        `,
+          [userId, postId, realValue]
+        );
+
+        await tm.query(
+          `
+    update post
+    set points = points + $1
+    where id = $2
+      `,
+          [realValue, postId]
+        );
       });
-      return true;
-    } else if (uphoot.value === realValue) {
-      // if the user has voted on the post before but want to cancel their vote
-      await AppDataSource.transaction(async (txmng) => {
-        await txmng.query(`
-          delete from uphoot
-          where "userId" = ${userId} and "postId" = ${postId};
-        `);
-        await txmng.query(`
-          update post
-          set points = points - ${realValue}
-          where id = ${postId};
-        `);
-      });
-      return true;
     }
-    return false;
+    return true;
   }
 
   @Query(() => PaginatedPosts)
@@ -121,17 +130,35 @@ export class PostResolver {
 
     const replacements: any[] = [realLimitPlusOne];
 
-    if (req.session.userId) {
-      replacements.push(req.session.userId);
-    }
-
-    let cursorIdx = 3;
     if (cursor) {
       replacements.push(new Date(parseInt(cursor)));
-      cursorIdx = replacements.length;
     }
 
-    const posts = await getPostsWithCreator({ replacements, currentUserId: req.session.userId, cursor, cursorIdx });
+    const posts = await AppDataSource.query(
+      `select p.*
+      from post p
+      ${cursor ? `where p."createdAt" < $2` : ""}
+      order by p."createdAt" DESC
+      limit $1
+      `,
+        replacements
+    );
+
+    // const qb = AppDataSource
+    //   .getRepository(Post)
+    //   .createQueryBuilder("p")
+    //   .innerJoinAndSelect("p.creator", "u", 'u.id = p."creatorId"')
+    //   .orderBy('p."createdAt"', "DESC")
+    //   .take(reaLimitPlusOne);
+
+    // if (cursor) {
+    //   qb.where('p."createdAt" < :cursor', {
+    //     cursor: new Date(parseInt(cursor)),
+    //   });
+    // }
+
+    // const posts = await qb.getMany();
+    // console.log("posts: ", posts);
 
     return {
       posts: posts.slice(0, realLimit),
@@ -140,9 +167,8 @@ export class PostResolver {
   }
 
   @Query(() => Post, { nullable: true })
-  async post(@Arg('id', () => Int) id: number): Promise<Post | undefined> {
-    const post = await Post.findOne({ where: { id } });
-    return post || undefined;
+  post(@Arg('id', () => Int) id: number): Promise<Post | null> {
+    return Post.findOneBy({ id })
   }
 
   @Mutation(() => Post)

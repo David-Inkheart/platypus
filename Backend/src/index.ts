@@ -14,6 +14,7 @@ import { MyContext } from "./types";
 import cors from "cors";
 import AppDataSource from "./data-source";
 import { createUserLoader } from "./utils/createUserLoader";
+import { createUphootLoader } from "./utils/createUphootLoader";
 
 configDotenv();
 
@@ -71,6 +72,7 @@ const main = async () => {
       res,
       redisClient,
       userLoader: createUserLoader(),
+      uphootLoader: createUphootLoader(),
     })
   });
 

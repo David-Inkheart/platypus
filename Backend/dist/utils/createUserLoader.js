@@ -6,14 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createUserLoader = void 0;
 const dataloader_1 = __importDefault(require("dataloader"));
 const User_1 = require("../entities/User");
-const typeorm_1 = require("typeorm");
 const createUserLoader = () => new dataloader_1.default(async (userIds) => {
-    const users = await User_1.User.findBy({ id: (0, typeorm_1.In)(userIds) });
+    const users = await User_1.User.findByIds(userIds);
     const userIdToUser = {};
-    users.forEach((user) => {
-        userIdToUser[user.id] = user;
+    users.forEach((u) => {
+        userIdToUser[u.id] = u;
     });
-    return userIds.map((userId) => userIdToUser[userId]);
+    const sortedUsers = userIds.map((userId) => userIdToUser[userId]);
+    return sortedUsers;
 });
 exports.createUserLoader = createUserLoader;
 //# sourceMappingURL=createUserLoader.js.map

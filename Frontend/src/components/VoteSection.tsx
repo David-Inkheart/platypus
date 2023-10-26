@@ -14,12 +14,7 @@ export const VoteSection: React.FC<VoteSectionProps> = ({ post }) => {
   return (
       <Flex direction={"column"} align={'center'}>
         <IconButton
-          colorScheme={post.voteStatus === 1 ? "teal" : undefined}
-          // variant={post.voteStatus === 1 ? "solid" : undefined}
-          aria-label="Upvote"
-          icon={<ChevronUpIcon color={'teal.900'} />}
-          size={"sm"}
-        onClick={async () => {
+          onClick={async () => {
             if (post.voteStatus === 1) {
               return;
             }
@@ -30,16 +25,16 @@ export const VoteSection: React.FC<VoteSectionProps> = ({ post }) => {
             });
             setLoadingState('not-loading');
           }}
+          colorScheme={post.voteStatus === 1 ? "teal" : undefined}
+          // variant={post.voteStatus === 1 ? "solid" : undefined}
+          aria-label="Upvote"
+          icon={<ChevronUpIcon color={'teal.900'} />}
+          size={"sm"}
           isLoading={loadingState === 'upvote-loading'}
         />
         <Text>{post.points}</Text>
         <IconButton
-          colorScheme={post.voteStatus === -1 ? "orange" : undefined}
-          // variant="solid"
-          aria-label="Downvote"
-          icon={<ChevronDownIcon color={'teal.900'} />}
-          size={"sm"}
-        onClick={async () => {
+          onClick={async () => {
             if (post.voteStatus === -1) {
               return;
             }
@@ -50,6 +45,11 @@ export const VoteSection: React.FC<VoteSectionProps> = ({ post }) => {
             });
             setLoadingState('not-loading');
           }}
+          colorScheme={post.voteStatus === -1 ? "orange" : undefined}
+          // variant="solid"
+          aria-label="Downvote"
+          icon={<ChevronDownIcon color={'teal.900'} />}
+          size={"sm"}
           isLoading={loadingState === 'downvote-loading'}
         />
       </Flex>

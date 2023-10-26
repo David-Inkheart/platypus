@@ -20,9 +20,9 @@ require("reflect-metadata");
 const type_graphql_1 = require("type-graphql");
 const Post_1 = require("../entities/Post");
 const isAuth_1 = require("../middleware/isAuth");
-const postsAccess_1 = require("../data/postsAccess");
 const data_source_1 = __importDefault(require("../data-source"));
 const User_1 = require("../entities/User");
+const Uphoot_1 = require("../entities/Uphoot");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -50,87 +50,76 @@ PaginatedPosts = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], PaginatedPosts);
 let PostResolver = exports.PostResolver = class PostResolver {
-    textSnippet(post) {
-        return post.text.slice(0, 100);
+    textSnippet(root) {
+        return root.text.slice(0, 100);
     }
     creator(post, { userLoader }) {
         return userLoader.load(post.creatorId);
+    }
+    async voteStatus(post, { uphootLoader, req }) {
+        if (!req.session.userId) {
+            return null;
+        }
+        const uphoot = await uphootLoader.load({
+            postId: post.id,
+            userId: req.session.userId,
+        });
+        return uphoot ? uphoot.value : null;
     }
     async vote(postId, value, { req }) {
         const isUpHoot = value !== -1;
         const realValue = isUpHoot ? 1 : -1;
         const { userId } = req.session;
-        const uphoot = await data_source_1.default.query(`
-      select * from uphoot
-      where "postId" = ${postId} and "userId" = ${userId}
-      for update;
-    `);
+        const uphoot = await Uphoot_1.Uphoot.findOne({ where: { postId, userId } });
         if (uphoot && uphoot.value !== realValue) {
-            await data_source_1.default.transaction(async (txmng) => {
-                await txmng.query(`
-          update uphoot
-          set value = ${realValue}
-          where "userId" = ${userId} and "postId" = ${postId};
-        `);
-                await txmng.query(`
+            await data_source_1.default.transaction(async (tm) => {
+                await tm.query(`
+    update uphoot
+    set value = $1
+    where "postId" = $2 and "userId" = $3
+        `, [realValue, postId, userId]);
+                await tm.query(`
           update post
-          set points = points + ${2 * realValue}
-          where id = ${postId};
-        `);
+          set points = points + $1
+          where id = $2
+        `, [2 * realValue, postId]);
             });
-            return true;
         }
         else if (!uphoot) {
-            await data_source_1.default.transaction(async (txmng) => {
-                await txmng.query(`
-          insert into uphoot ("userId", "postId", value)
-          values (${userId}, ${postId}, ${realValue});
-        `);
-                await txmng.query(`
-          update post
-          set points = points + ${realValue}
-          where id = ${postId};
-        `);
+            await data_source_1.default.transaction(async (tm) => {
+                await tm.query(`
+    insert into uphoot ("userId", "postId", value)
+    values ($1, $2, $3)
+        `, [userId, postId, realValue]);
+                await tm.query(`
+    update post
+    set points = points + $1
+    where id = $2
+      `, [realValue, postId]);
             });
-            return true;
         }
-        else if (uphoot.value === realValue) {
-            await data_source_1.default.transaction(async (txmng) => {
-                await txmng.query(`
-          delete from uphoot
-          where "userId" = ${userId} and "postId" = ${postId};
-        `);
-                await txmng.query(`
-          update post
-          set points = points - ${realValue}
-          where id = ${postId};
-        `);
-            });
-            return true;
-        }
-        return false;
+        return true;
     }
     async posts(limit, cursor, { req }) {
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
         const replacements = [realLimitPlusOne];
-        if (req.session.userId) {
-            replacements.push(req.session.userId);
-        }
-        let cursorIdx = 3;
         if (cursor) {
             replacements.push(new Date(parseInt(cursor)));
-            cursorIdx = replacements.length;
         }
-        const posts = await (0, postsAccess_1.getPostsWithCreator)({ replacements, currentUserId: req.session.userId, cursor, cursorIdx });
+        const posts = await data_source_1.default.query(`select p.*
+      from post p
+      ${cursor ? `where p."createdAt" < $2` : ""}
+      order by p."createdAt" DESC
+      limit $1
+      `, replacements);
         return {
             posts: posts.slice(0, realLimit),
             hasMore: posts.length === realLimitPlusOne,
         };
     }
-    async post(id) {
-        const post = await Post_1.Post.findOne({ where: { id } });
-        return post || undefined;
+    post(id) {
+        return Post_1.Post.findOneBy({ id });
     }
     async createPost(input, { req }) {
         return Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save();
@@ -175,6 +164,13 @@ __decorate([
 ], PostResolver.prototype, "creator", null);
 __decorate([
     (0, type_graphql_1.FieldResolver)(() => type_graphql_1.Int, { nullable: true }),
+    __param(0, (0, type_graphql_1.Root)()),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Post_1.Post, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "voteStatus", null);
+__decorate([
     (0, type_graphql_1.Mutation)(() => Boolean),
     (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
     __param(0, (0, type_graphql_1.Arg)('postId', () => type_graphql_1.Int)),

@@ -6,7 +6,7 @@ import { useState } from "react";
 import Layout from "../components/Layout";
 import UpdateDeletePostButtons from "../components/UpdateDeletePostButtons";
 import { VoteSection } from "../components/VoteSection";
-import { useMeQuery, usePostsQuery } from "../generated/graphql";
+import { useMeQuery, usePostsQuery, PostQuery } from "../generated/graphql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 
 const Index = () => {
@@ -22,7 +22,7 @@ const Index = () => {
   if (!fetching && !data) {
     return (
       <div>
-        <div>you got query failed for some reason</div>        
+        <div>your query failed for some reason</div>        
         <div>{error?.message}</div>
       </div>
     )
