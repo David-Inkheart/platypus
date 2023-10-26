@@ -12,6 +12,9 @@ import { Uphoot } from "../entities/Uphoot";
 export const createUphootLoader = () =>
   new DataLoader<{ postId: number; userId: number }, Uphoot | null>(
     async (keys) => {
+      // keys = [{postId: 5, userId: 10}]
+      // custom sql query could be used here instead of using the ORM
+      // e.g. SELECT * FROM updoot WHERE postId, userId in keys...
       const updoots = await Uphoot.findByIds(keys as any);
       const updootIdsToUpdoot: Record<string, Uphoot> = {};
       updoots.forEach((uphoot) => {

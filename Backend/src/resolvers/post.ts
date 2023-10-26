@@ -31,6 +31,8 @@ export class PostResolver {
     return root.text.slice(0, 100);
   }
 
+  // FieldResolver can be used to resolve a field that is not in the entity, but has a relation to the entity
+  // and it only runs when the field is requested
   @FieldResolver(() => User)
   creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
     return userLoader.load(post.creatorId);
