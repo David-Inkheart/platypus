@@ -22,6 +22,8 @@ const main = async () => {
 
   const app = express();
 
+  const port = process.env.PORT;
+
   const redisStore = new RedisStore({
     client: redisClient,
     prefix: "myapp:",
@@ -47,8 +49,8 @@ const main = async () => {
         httpOnly: true, // required: http only cookie
         // samesite: "none", for graphql playground
         sameSite: "lax", // || none. Optional: csrf 
-        secure: false, // for localhost
-        // secure: __prod__, // cookie only works in https
+        // secure: false, // for localhost
+        secure: __prod__, // cookie only works in https
       },
       resave: false, // required: force lightweight session keep alive (touch)
       saveUninitialized: false, // recommended: only save session when data exists
@@ -89,8 +91,8 @@ const main = async () => {
   await apolloServer.start();
   apolloServer.applyMiddleware({ app, cors: false });
 
-  app.listen(4000, () => {
-    console.log("server started on localhost:4000");
+  app.listen(port, () => {
+    console.log(`server started on localhost:${port}`);
   });
 }
 

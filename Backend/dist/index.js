@@ -22,6 +22,7 @@ const createUphootLoader_1 = require("./utils/createUphootLoader");
 (0, dotenv_1.configDotenv)();
 const main = async () => {
     const app = (0, express_1.default)();
+    const port = process.env.PORT;
     const redisStore = new connect_redis_1.default({
         client: redisClient_1.default,
         prefix: "myapp:",
@@ -39,7 +40,7 @@ const main = async () => {
             maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
             httpOnly: true,
             sameSite: "lax",
-            secure: false,
+            secure: constants_1.__prod__,
         },
         resave: false,
         saveUninitialized: false,
@@ -64,11 +65,10 @@ const main = async () => {
     }).catch((err) => {
         console.error(err);
     });
-    await data_source_1.default.runMigrations();
     await apolloServer.start();
     apolloServer.applyMiddleware({ app, cors: false });
-    app.listen(4000, () => {
-        console.log("server started on localhost:4000");
+    app.listen(port, () => {
+        console.log(`server started on localhost:${port}`);
     });
 };
 main().catch(err => {

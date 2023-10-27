@@ -1,5 +1,8 @@
 .env
+.env.production
 yarn.lock
 node_modules
 yarn-error.log
-
+ormconfig.ts
+dist/ormconfig.js
+dist/ormconfig.js.map

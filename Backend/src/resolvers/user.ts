@@ -9,6 +9,9 @@ import { sendEmail } from "../utils/sendEmail";
 import { v4 } from 'uuid';
 import { } from 'typeorm'
 import AppDataSource from "../data-source";
+import { configDotenv } from "dotenv";
+
+configDotenv();
 
 @ObjectType()
   class FieldError {
@@ -115,7 +118,7 @@ export class UserResolver {
     sendEmail({
       to: email,
       subject: "Change Password",
-      html: `<a href="http://localhost:3000/change-password/${token}">reset password</a>`
+      html: `<a href="${process.env.CORS_ORIGIN}/change-password/${token}">reset password</a>`
     });
 
     return true;

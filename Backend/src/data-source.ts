@@ -9,11 +9,12 @@ configDotenv();
 
 const AppDataSource = new DataSource({
   type: "postgres",
-  username: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  database: 'rgtFullstack2',
+  // database: 'rgtFullstack2',
+  // username: process.env.POSTGRES_USER,
+  // password: process.env.POSTGRES_PASSWORD,
+  url: process.env.DATABASE_URL,
   logging: true,
-  synchronize: true,
+  // synchronize: true,
   migrations: [__dirname + "/migrations/*"], // path to migrations
   entities: [Post, User, Uphoot],
 });

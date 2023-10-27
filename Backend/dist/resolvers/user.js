@@ -25,6 +25,8 @@ const validateRegister_1 = require("../utils/validateRegister");
 const sendEmail_1 = require("../utils/sendEmail");
 const uuid_1 = require("uuid");
 const data_source_1 = __importDefault(require("../data-source"));
+const dotenv_1 = require("dotenv");
+(0, dotenv_1.configDotenv)();
 let FieldError = class FieldError {
 };
 __decorate([
@@ -111,7 +113,7 @@ let UserResolver = exports.UserResolver = class UserResolver {
         (0, sendEmail_1.sendEmail)({
             to: email,
             subject: "Change Password",
-            html: `<a href="http://localhost:3000/change-password/${token}">reset password</a>`
+            html: `<a href="${process.env.CORS_ORIGIN}/change-password/${token}">reset password</a>`
         });
         return true;
     }
