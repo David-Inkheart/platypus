@@ -63,10 +63,9 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
   let cookie = '';
   if (isServer()) {
     cookie = ctx?.req?.headers?.cookie?.split(';').find((c: string) => c.trim().startsWith('Sid='));
-    // console.log('cookie: ', cookie);
   }
   return {
-  url: 'http://localhost:4000/graphql',
+  url: process.env.NEXT_PUBLIC_API_URL as string,
   fetchOptions: {
     credentials: 'include' as const,
     cache: 'no-cache' as const,
@@ -105,7 +104,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
               `,
               { id: postId } as any
             );
-            console.log('data: ', data);
+            // console.log('data: ', data);
             if (data) {
               if (data.voteStatus === value) {
                 return;

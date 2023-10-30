@@ -45,12 +45,13 @@ const main = async () => {
       name: COOKIE_NAME,
       store: redisStore,
       cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
+        maxAge: 1000 * 60 * 60 * 24 * 7,  // 7 days
         httpOnly: true, // required: http only cookie
         // samesite: "none", for graphql playground
         sameSite: "lax", // || none. Optional: csrf 
         // secure: false, // for localhost
         secure: __prod__, // cookie only works in https
+        domain: __prod__ ? ".david-inkheart.tech" : undefined,
       },
       resave: false, // required: force lightweight session keep alive (touch)
       saveUninitialized: false, // recommended: only save session when data exists
@@ -75,7 +76,9 @@ const main = async () => {
       redisClient,
       userLoader: createUserLoader(),
       uphootLoader: createUphootLoader(),
-    })
+    }),
+    // cache: "bounded",
+    // persistedQueries: false
   });
 
   await AppDataSource.initialize()
@@ -86,6 +89,7 @@ const main = async () => {
     console.error(err);
   });
 
+  // if data source is not initialized, run migrations. Incase of an error, coment out the line below or retwea data source initialization
   await AppDataSource.runMigrations();
 
   await apolloServer.start();

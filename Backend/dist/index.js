@@ -57,7 +57,7 @@ const main = async () => {
             redisClient: redisClient_1.default,
             userLoader: (0, createUserLoader_1.createUserLoader)(),
             uphootLoader: (0, createUphootLoader_1.createUphootLoader)(),
-        })
+        }),
     });
     await data_source_1.default.initialize()
         .then(() => {

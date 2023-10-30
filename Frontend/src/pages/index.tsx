@@ -6,7 +6,7 @@ import { useState } from "react";
 import Layout from "../components/Layout";
 import UpdateDeletePostButtons from "../components/UpdateDeletePostButtons";
 import { VoteSection } from "../components/VoteSection";
-import { useMeQuery, usePostsQuery, PostQuery } from "../generated/graphql";
+import { usePostsQuery } from "../generated/graphql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 
 const Index = () => {
