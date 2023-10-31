@@ -6,20 +6,19 @@ import { useState } from "react";
 import Layout from "../components/Layout";
 import UpdateDeletePostButtons from "../components/UpdateDeletePostButtons";
 import { VoteSection } from "../components/VoteSection";
-import { usePostsQuery } from "../generated/graphql";
+import { PostsQuery, usePostsQuery } from "../generated/graphql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 
 const Index = () => {
-  const [variables, setVariables] = useState({
-    limit: 15,
-    cursor: null as null | string
+  const { data, error, loading, fetchMore, variables } = usePostsQuery({
+    variables: {
+      limit: 15,
+      cursor: null,
+    },
+    notifyOnNetworkStatusChange: true, // this will make the loading state work
   });
 
-  const [{ data, error, fetching }] = usePostsQuery({
-    variables,
-  });
-
-  if (!fetching && !data) {
+  if (!loading && !data) {
     return (
       <div>
         <div>your query failed for some reason</div>        
@@ -30,7 +29,7 @@ const Index = () => {
 
   return (
     <Layout>
-      {!data && fetching ?
+      {!data && loading ?
         (
           <div >loading...</div>
         ) : (
@@ -64,13 +63,31 @@ const Index = () => {
         <Flex>
           <Button
             onClick={() => {
-              setVariables({
-                limit: variables.limit,
-                cursor: data.posts.posts[data.posts.posts.length - 1].createdAt,
-              })
+              fetchMore({
+                variables: {
+                  limit: variables?.limit,
+                  cursor: data.posts.posts[data.posts.posts.length - 1].createdAt,
+                },
+                // updateQuery: (previousValue, { fetchMoreResult }): PostsQuery => {
+                //   if (!fetchMoreResult) {
+                //     return previousValue as PostsQuery;
+                //   }
+                //   return {
+                //     __typename: 'Query',
+                //     posts: {
+                //       __typename: 'PaginatedPosts',
+                //       hasMore: (fetchMoreResult as PostsQuery).posts.hasMore,
+                //       posts: [
+                //         ...(previousValue as PostsQuery).posts.posts,
+                //         ...(fetchMoreResult as PostsQuery).posts.posts,
+                //       ],
+                //     },
+                //   };
+                // }
+              });
             }
             }
-            isLoading={fetching}
+            isLoading={loading}
             m='auto' my={8}
             colorScheme='teal'
           >
@@ -82,4 +99,4 @@ const Index = () => {
   )
 };
 
-export default withUrqlClient(createUrqlClient, {ssr: true})(Index)
+export default Index;

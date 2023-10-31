@@ -7,9 +7,9 @@ import { formatTimestampToHumanDate } from '../../utils/timeStampToDate';
 import UpdateDeletePostButtons from '../../components/UpdateDeletePostButtons';
 
 const Post = () => {
-  const [{ data, error, fetching }] = useGetPostFromUrl();
+  const { data, error, loading } = useGetPostFromUrl();
 
-  if (fetching) {
+  if (loading) {
     return <Layout><div>Loading...</div></Layout>;
   }
 
@@ -67,5 +67,5 @@ return (
   );
 };
 
-export default withUrqlClient(createUrqlClient, { ssr: true })(Post);
+export default Post;
 

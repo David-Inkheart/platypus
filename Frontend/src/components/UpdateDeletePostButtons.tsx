@@ -12,9 +12,9 @@ interface UpdateDeletePostButtonsProps {
 }
 
 const UpdateDeletePostButtons: React.FC<UpdateDeletePostButtonsProps> = ({ id, creatorId }) => {
-  const [{ data: meData }] = useMeQuery();
+  const { data: meData } = useMeQuery();
   const router = useRouter();
-  const [, deletePost] = useDeletePostMutation();
+  const [deletePost] = useDeletePostMutation();
 
   if (meData?.me?.id !== creatorId) {
     return null;
@@ -41,7 +41,7 @@ const UpdateDeletePostButtons: React.FC<UpdateDeletePostButtonsProps> = ({ id, c
           aria-label="Delete Post"
           icon={<DeleteIcon color={'red'} />}
           size={"sm"}
-          onClick={() => deletePost({ id })
+        onClick={() => deletePost({ variables: { id } })
           .then(() => router.push('/'))
         }
           

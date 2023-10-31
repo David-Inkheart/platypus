@@ -11,7 +11,7 @@ const config: CodegenConfig = {
       plugins: [
         "typescript",
         "typescript-operations",
-        "typescript-urql",
+        "typescript-react-apollo",
       ]
     }
   }

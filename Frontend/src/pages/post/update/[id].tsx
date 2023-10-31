@@ -11,15 +11,15 @@ import { useRouter } from 'next/router';
 const UpdatePost = ({ }) => {
   const router = useRouter();
   const intId = useGetIntId();
-  const [{ data, error, fetching }] = usePostQuery({
-    pause: intId === -1, // pause the query if the id is -1
+  const { data, error, loading } = usePostQuery({
+    skip: intId === -1, // pause the query if the id is -1
     variables: {
       id: intId,
     },
   });
-  const [, UpdatePost] = useUpdatePostMutation();
+  const [UpdatePost] = useUpdatePostMutation();
 
-  if (fetching) {
+  if (loading) {
     return (
       <Layout>
         <div>loading...</div>
@@ -47,8 +47,8 @@ const UpdatePost = ({ }) => {
             if (values.title === '' || values.text === '') {
               return;
             }
-            const { error } = await UpdatePost({ id:  intId, ...values });
-            if (!error) {
+            const { errors } = await UpdatePost({ variables: { id:  intId, ...values } });
+            if (!errors) {
               // router.push('/');
               router.back();
             }
@@ -85,4 +85,4 @@ const UpdatePost = ({ }) => {
     </Layout>
 };
 
-export default withUrqlClient(createUrqlClient, { ssr: true })(UpdatePost);
+export default UpdatePost;

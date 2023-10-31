@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useLogoutMutation, useMeQuery } from '../generated/graphql';
 import { isServer } from '../utils/isServer';
 import { useRouter } from 'next/router';
+import { useApolloClient } from '@apollo/client';
 
 interface NavBarProps {}
 
@@ -10,10 +11,11 @@ const NavBar: React.FC<NavBarProps> = ({ }) => {
   const router = useRouter();
   // Initialize isClient to false on the server side
   const [isClient, setIsClient] = useState(false);
-  const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
+  const [logout, { loading: logoutLoading }] = useLogoutMutation();
+  const apolloClient = useApolloClient();
   // get the current user
-  const [{ data, fetching }] = useMeQuery({
-    pause: isServer(), // if isServer is true, pause the query so that it doesn't render on the server side unnecessarily until isServer is false
+  const { data, loading }= useMeQuery({
+    skip: isServer(), // if isServer is true, pause the query so that it doesn't render on the server side unnecessarily until isServer is false
   });
 
   useEffect(() => {
@@ -23,7 +25,7 @@ const NavBar: React.FC<NavBarProps> = ({ }) => {
   let body = null;
 
   // data is loading
-  if (fetching) {
+  if (loading) {
     body = null;
     // user not logged in
   } else if (!data?.me) {
@@ -53,9 +55,10 @@ const NavBar: React.FC<NavBarProps> = ({ }) => {
         <Button
           onClick={async () => {
             await logout({});
-            router.reload();
+            await apolloClient.resetStore();
+            // router.reload();
           }}
-          isLoading={logoutFetching}
+          isLoading={logoutLoading}
           variant="link"
           color="white"
         >

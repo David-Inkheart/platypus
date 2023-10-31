@@ -37,10 +37,11 @@ const main = async () => {
         name: constants_1.COOKIE_NAME,
         store: redisStore,
         cookie: {
-            maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
+            maxAge: 1000 * 60 * 60 * 24 * 7,
             httpOnly: true,
             sameSite: "lax",
             secure: constants_1.__prod__,
+            domain: constants_1.__prod__ ? ".david-inkheart.tech" : undefined,
         },
         resave: false,
         saveUninitialized: false,

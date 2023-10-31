@@ -90,7 +90,7 @@ const main = async () => {
   });
 
   // if data source is not initialized, run migrations. Incase of an error, coment out the line below or retwea data source initialization
-  await AppDataSource.runMigrations();
+  // await AppDataSource.runMigrations();
 
   await apolloServer.start();
   apolloServer.applyMiddleware({ app, cors: false });
