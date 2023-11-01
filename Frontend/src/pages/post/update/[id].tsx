@@ -1,14 +1,13 @@
 import { Box, Button } from '@chakra-ui/react';
 import { Form, Formik } from 'formik';
-import { withUrqlClient } from 'next-urql';
 import InputField from '../../../components/InputField';
 import Layout from '../../../components/Layout';
 import { usePostQuery, useUpdatePostMutation } from '../../../generated/graphql';
-import { createUrqlClient } from '../../../utils/createUrqlClient';
 import { useGetIntId } from '../../../utils/useGetIntId';
 import { useRouter } from 'next/router';
+import { withApollo } from '../../../utils/withApollo';
 
-const UpdatePost = ({ }) => {
+const UpdatePost = () => {
   const router = useRouter();
   const intId = useGetIntId();
   const { data, error, loading } = usePostQuery({
@@ -85,4 +84,4 @@ const UpdatePost = ({ }) => {
     </Layout>
 };
 
-export default UpdatePost;
+export default withApollo({ ssr: false })(UpdatePost);

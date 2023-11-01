@@ -31,7 +31,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "src/utils/createWithApollo.js"  ],
   "exclude": [
     "node_modules"
   ]

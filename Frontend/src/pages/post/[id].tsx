@@ -5,6 +5,7 @@ import { Box, Flex, Heading, Text } from '@chakra-ui/react';
 import { useGetPostFromUrl } from '../../utils/useGetPostFromUrl';
 import { formatTimestampToHumanDate } from '../../utils/timeStampToDate';
 import UpdateDeletePostButtons from '../../components/UpdateDeletePostButtons';
+import { withApollo } from '../../utils/withApollo';
 
 const Post = () => {
   const { data, error, loading } = useGetPostFromUrl();
@@ -67,5 +68,5 @@ return (
   );
 };
 
-export default Post;
+export default withApollo({ ssr: true })(Post);
 

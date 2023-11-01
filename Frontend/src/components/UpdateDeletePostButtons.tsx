@@ -41,7 +41,11 @@ const UpdateDeletePostButtons: React.FC<UpdateDeletePostButtonsProps> = ({ id, c
           aria-label="Delete Post"
           icon={<DeleteIcon color={'red'} />}
           size={"sm"}
-        onClick={() => deletePost({ variables: { id } })
+        onClick={() => deletePost({
+          variables: { id }, update: (cache) => {
+            // Post:123
+            cache.evict({ id: 'Post:' + id });
+        } })
           .then(() => router.push('/'))
         }
           

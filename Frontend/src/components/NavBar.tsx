@@ -7,7 +7,7 @@ import { useApolloClient } from '@apollo/client';
 
 interface NavBarProps {}
 
-const NavBar: React.FC<NavBarProps> = ({ }) => {
+const NavBar: React.FC<NavBarProps> = ({}) => {
   const router = useRouter();
   // Initialize isClient to false on the server side
   const [isClient, setIsClient] = useState(false);

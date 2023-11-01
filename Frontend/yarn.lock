@@ -3685,6 +3685,11 @@ nanoid@^3.3.6:
   resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.6.tgz#443380c856d6e9f9824267d960b4236ad583ea4c"
   integrity sha512-BGcqMMJuToF7i1rt+2PWSNVnWIkGCU78jBG3RxO/bZlnZPK2Cmi2QaffxGO/2RvWi9sL+FAiRiXMgsyxQ1DIDA==
 
+next-apollo@^5.0.8:
+  version "5.0.8"
+  resolved "https://registry.yarnpkg.com/next-apollo/-/next-apollo-5.0.8.tgz#d6b665cb470338d1bcaa8e7ec6fa345757cd95a1"
+  integrity sha512-CzBOQAPXUJN5+I5mzBU7iATt2TzBpK0v3iEi4lZxG7K+NL5B7ZaaZ8+1kTfgIRl3BBF8Ijl4+FLYhYXR3VTawg==
+
 next-urql@^5.0.2:
   version "5.0.2"
   resolved "https://registry.yarnpkg.com/next-urql/-/next-urql-5.0.2.tgz#37a895b1844f3ab7c091526e0894caddd3abcf82"
